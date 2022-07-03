@@ -69,38 +69,31 @@
       result += `}`;
       document.getElementById('result-textarea').value = result;
       }
-
-      window.onload =  function () {
-        document.getElementById('input-textarea').placeholder = `\n
-CREATE TABLE \'test\' (
-\'id_id\' int(11) unsigned NOT NULL AUTO_INCREMENT,
-\'dsf\' bigint(20) DEFAULT NULL,
-\'asdfasdf\' float DEFAULT NULL,
-\'sadfasdf\' double DEFAULT NULL,
-\'dsffsd\' bit(11) DEFAULT NULL,
-\'xzcxzc\' tinyint(1) DEFAULT NULL,
-\'er4t3tfd\' decimal(10,0) DEFAULT NULL,
-\'sadfasfd\' char(1) DEFAULT NULL,
-\'asdfsfadsdf\' varchar(50) DEFAULT NULL,
-\'cvxzfdgsdfg\' tinytext DEFAULT NULL,
-\'gfhfghfghhg\' text DEFAULT NULL,
-\'vcxbxbcv\' mediumtext DEFAULT NULL,
-\'cxbvxcvbxbcv\' longtext DEFAULT NULL,
-\'jmhhmjhjm\' date DEFAULT NULL,
-\'hmjnhmj\' datetime DEFAULT NULL,
-\'mhjhmjhjm\' timestamp NULL DEFAULT NULL,
-PRIMARY KEY (\'id\')
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
-    `;
-      }
   </script>
 </head>
 <body>
   <h1>Mysql SQL 문을 이용하여, Go Struct를 생성합니다.</h1>
-  <textarea id="input-textarea" style="width: 600px;height: 600px;"></textarea>
+  <textarea id="input-textarea" style="width: 600px;height: 600px;" placeholder="CREATE TABLE `diary` (
+    `id` int(11) NOT NULL AUTO_INCREMENT,
+    `text` text DEFAULT NULL,
+    `time` datetime NOT NULL DEFAULT current_timestamp(),
+    `writer` text DEFAULT NULL,
+    `discord_id` bigint(20) DEFAULT NULL,
+    `kakao_id` bigint(20) DEFAULT NULL,
+    `email_id` int(11) DEFAULT NULL,
+    PRIMARY KEY (`id`)
+  ) ENGINE=InnoDB AUTO_INCREMENT=1089 DEFAULT CHARSET=utf8mb4;"></textarea>
   <br>
   <button id="convert-button" style="width: 600px;" onclick="convert();">Convert</button>
   <br>
-  <textarea id="result-textarea" style="width: 600px;height: 600px;"></textarea>
+  <textarea id="result-textarea" style="width: 600px;height: 600px;" placeholder='type Diary struct {
+    Id int `json:"id"`
+    Text string `json:"text"`
+    Time time.Time `json:"time"`
+    Writer string `json:"writer"`
+    DiscordId int `json:"discord_id"`
+    KakaoId int `json:"kakao_id"`
+    EmailId int `json:"email_id"`
+}'></textarea>
 </body>
 </html>
