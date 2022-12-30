@@ -26,6 +26,26 @@
       "datetime":"time.Time",
       "timestamp":"time.Time",
       "enum":"string",
+      "bool":"bool",
+      // NULL
+      "null.int":"null.Int",
+      "null.bigint":"null.Int",
+      "null.float":"null.Float",
+      "null.double":"null.Float",
+      "null.bit":"null.Int",
+      "null.tinyint":"null.Int",
+      "null.decimal":"null.Int",
+      "null.char":"null.String",
+      "null.varchar":"null.String",
+      "null.tinytext":"null.String",
+      "null.text":"null.String",
+      "null.mediumtext":"null.String",
+      "null.longtext":"null.String",
+      "null.date":"null.Time",
+      "null.datetime":"null.Time",
+      "null.timestamp":"null.Time",
+      "null.enum":"null.String",
+      "null.bool":"bool",
     };
     function toCamelCase(str) {
       return str.toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, (m, chr) => chr.toUpperCase());
@@ -60,12 +80,18 @@
         let dataName = splitLine[0].replace(/[`'"]/g,"");
         let dataType = splitLine[1].replace(/\([\.\d\D]*/g,"");
 
+        if (splitLine[1].startsWith("tinyint(1)")){
+          dataType = "bool";
+        }
+        if (line.indexOf("NOT NULL") == -1){
+          dataType = "null."+dataType
+        }
         dataNames.push(dataName);
         dataTypes.push(dataType);
       }
       let result = `type ${toPascalCase(tableName)} struct {\n`;
       for(let i=0;i<dataNames.length;i++){
-        result += `\t${toPascalCase(dataNames[i])} ${mysqlToGolang[dataTypes[i]]} \`json:"${dataNames[i]}"\`\n`;
+        result += `\t${toPascalCase(dataNames[i])} ${mysqlToGolang[dataTypes[i]]} \n`;
       }
       result += `}`;
       document.getElementById('result-textarea').value = result;
@@ -88,13 +114,13 @@
   <button id="convert-button" style="width: 600px;" onclick="convert();">Convert</button>
   <br>
   <textarea id="result-textarea" style="width: 600px;height: 600px;" placeholder='type Diary struct {
-    Id int `json:"id"`
-    Text string `json:"text"`
-    Time time.Time `json:"time"`
-    Writer string `json:"writer"`
-    DiscordId int `json:"discord_id"`
-    KakaoId int `json:"kakao_id"`
-    EmailId int `json:"email_id"`
+	Id int 
+	Text null.String 
+	Time time.Time 
+	Writer null.String 
+	DiscordId null.Int 
+	KakaoId null.Int 
+	EmailId null.Int 
 }'></textarea>
 </body>
 </html>
