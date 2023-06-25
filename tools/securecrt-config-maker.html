@@ -132,7 +132,13 @@ folder02,0.0.0.0`;
         result += `\n      <key name="${key}">`;
 
         obj[key].forEach(server => {
-          result += `\n        <key name="${server} ${key}">\n          <string name="Hostname">${server}</string>\n          <dword name="[SSH2] Port">${PORT}</dword>\n          <string name="Username">${USER}</string>\n        </key>`;
+          result += `
+        <key name="${server} ${key}">
+          <string name="Hostname">${server}</string>
+          <dword name="[SSH2] Port">${PORT}</dword>
+          <string name="Username">${USER}</string>
+          <string name="Color Scheme">Desert</string>
+        </key>`;
         });
 
         result += `\n      </key>`;
