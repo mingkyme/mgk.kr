@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SSL Certificate Information</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markdown.min.js" integrity="sha512-IHQR8J+JbQpZ1tjkHkq8Ivsgo6ovfnYbQnYzmoKCjTCQG90YVs9l+2P14DRIZ94VBrB+F86Ju4wSGOMOjfVCQQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script>
+      (function(){var w=window;if(w.ChannelIO){return w.console.error("ChannelIO script included twice.");}var ch=function(){ch.c(arguments);};ch.q=[];ch.c=function(args){ch.q.push(args);};w.ChannelIO=ch;function l(){if(w.ChannelIOInitialized){return;}w.ChannelIOInitialized=true;var s=document.createElement("script");s.type="text/javascript";s.async=true;s.src="https://cdn.channel.io/plugin/ch-plugin-web.js";var x=document.getElementsByTagName("script")[0];if(x.parentNode){x.parentNode.insertBefore(s,x);}}if(document.readyState==="complete"){l();}else{w.addEventListener("DOMContentLoaded",l);w.addEventListener("load",l);}})();
+    
+      ChannelIO('boot', {
+        "pluginKey": "b648da15-80e6-426f-a5df-5f0b22642b78"
+      });
+    </script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 20px auto; /* Add horizontal margin (auto) to center the content */
+            max-width: 800px; /* Limit the content width */
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            resize: vertical;
+        }
+
+        button {
+            display: block;
+            margin: 10px auto;
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #007BFF;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .copy-button {
+          display: inline-block;
+          margin: 0 10px;
+          padding: 5px 10px;
+
+        }
+        pre {
+          background-color: #f7f7f7;
+          padding: 10px;
+          border: 1px solid #ccc;
+          margin: 10px 0;
+
+          overflow: auto; /* Add this property to enable horizontal scrolling if necessary */
+      }
+    </style>
+</head>
+<body>
+    <h1>SSL Certificate Information</h1>
+    <label for="ipListInput">IP List:</label>
+    <textarea id="ipListInput" rows="5" placeholder="1.1.1.1
+2.2.2.2"></textarea>
+    <label for="domainListInput">Domain List:</label>
+    <textarea id="domainListInput" rows="5" placeholder="abc.com
+abc.net"></textarea>
+    <button onclick="generateOutput()">Generate Output</button>
+    
+    <label>notAfter Check Command</label> <button class="copy-button" onclick="copyToClipboard('output')">copy</button>
+    <pre id="output" ></pre>
+
+    <label>BEGIN CERTIFICATE Check Command</label><button class="copy-button" onclick="copyToClipboard('output2')">copy</button>
+    <pre id="output2"></pre>
+
+    <script>
+        function generateOutput() {
+            const ipListInputValue = document.getElementById("ipListInput").value;
+            const domainListInputValue = document.getElementById("domainListInput").value;
+
+            let ipList = ipListInputValue.split("\n").map(ip => ip.trim());
+            let domainList = domainListInputValue.split("\n").map(domain => domain.trim());
+
+            if (ipListInputValue.length === 0 || domainList.length === 0) {
+              ipList = ["1.1.1.1","2.2.2.2"];
+              domainList = ["abc.com","abc.net"];
+            }
+            
+            let result = "";
+            let result2 = "";
+
+            for (const domain of domainList) {
+                for (const ip of ipList) {
+                    result += `openssl s_client -connect ${ip}:443 -servername ${domain} 2>/dev/null | openssl x509 -noout -dates | grep 'notAfter'\n`;
+                    result2 += `openssl s_client -connect ${ip}:443 -servername ${domain} -showcerts 2>/dev/null | grep 'BEGIN CERTIFICATE' | wc -l\n`;
+                }
+                result += "\n";
+                result2 += "\n";
+            }
+
+            // Display the results in the HTML page
+            document.getElementById("output").textContent = result;
+            document.getElementById("output2").textContent = result2;
+        }
+                // Function to copy the content of the specified element to the clipboard
+                function copyToClipboard(elementId) {
+                  const element = document.getElementById(elementId);
+                  const range = document.createRange();
+                  range.selectNode(element);
+                  const selection = window.getSelection();
+                  selection.removeAllRanges();
+                  selection.addRange(range);
+      
+                  try {
+                      document.execCommand('copy');
+                      alert('Content copied to clipboard!');
+                  } catch (error) {
+                      alert('Unable to copy content to clipboard. Please try manually.');
+                  }
+      
+                  selection.removeAllRanges();
+              }
+    </script>
+</body>
+</html>
