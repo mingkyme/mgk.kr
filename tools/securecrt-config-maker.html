@@ -5,6 +5,13 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markdown.min.js" integrity="sha512-IHQR8J+JbQpZ1tjkHkq8Ivsgo6ovfnYbQnYzmoKCjTCQG90YVs9l+2P14DRIZ94VBrB+F86Ju4wSGOMOjfVCQQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script>
+    (function(){var w=window;if(w.ChannelIO){return w.console.error("ChannelIO script included twice.");}var ch=function(){ch.c(arguments);};ch.q=[];ch.c=function(args){ch.q.push(args);};w.ChannelIO=ch;function l(){if(w.ChannelIOInitialized){return;}w.ChannelIOInitialized=true;var s=document.createElement("script");s.type="text/javascript";s.async=true;s.src="https://cdn.channel.io/plugin/ch-plugin-web.js";var x=document.getElementsByTagName("script")[0];if(x.parentNode){x.parentNode.insertBefore(s,x);}}if(document.readyState==="complete"){l();}else{w.addEventListener("DOMContentLoaded",l);w.addEventListener("load",l);}})();
+  
+    ChannelIO('boot', {
+      "pluginKey": "b648da15-80e6-426f-a5df-5f0b22642b78"
+    });
+  </script>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -53,6 +60,17 @@
       overflow: auto;
     }
   </style>
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-3XBQJZ5SYY"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+
+    gtag('config', 'G-3XBQJZ5SYY');
+  </script>
+  
 </head>
 <body>
   <h1>SecureCRT Config Maker</h1>
@@ -103,7 +121,13 @@ folder02,0.0.0.0"></textarea>
         result += `\n      <key name="${key}">`;
 
         obj[key].forEach(server => {
-          result += `\n        <key name="${server} ${key}">\n          <string name="Hostname">${server}</string>\n          <dword name="[SSH2] Port">${PORT}</dword>\n          <string name="Username">${USER}</string>\n        </key>`;
+          result += `
+        <key name="${server} ${key}">
+          <string name="Hostname">${server}</string>
+          <dword name="[SSH2] Port">${PORT}</dword>
+          <string name="Username">${USER}</string>
+          <string name="Color Scheme">Desert</string>
+        </key>`;
         });
 
         result += `\n      </key>`;
