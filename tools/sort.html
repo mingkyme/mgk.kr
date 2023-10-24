@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-5">
+  <h1>Sort 하기</h1>
+  <div class="row">
+    <div class="col-md-6">
+      <div class="form-group">
+        <textarea id="input" class="form-control" rows="20" cols="30"></textarea>
+        <button class="btn btn-primary" onclick="sortAscending()">오름차순 정렬</button>
+        <button class="btn btn-primary" onclick="sortDescending()">내림차순 정렬</button>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="form-group">
+        <textarea id="output" class="form-control" rows="20" cols="30" readonly></textarea>
+        <button class="btn btn-success" id="copyButton">복사</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function sortAscending() {
+  var inputText = document.getElementById("input").value;
+  var lines = inputText.split('\n');
+  lines = lines.filter(line => line.trim() !== ''); // 빈 줄 제거
+  lines.sort();
+  document.getElementById("output").value = lines.join('\n');
+}
+
+function sortDescending() {
+  var inputText = document.getElementById("input").value;
+  var lines = inputText.split('\n');
+  lines = lines.filter(line => line.trim() !== ''); // 빈 줄 제거
+  lines.sort((a, b) => b.localeCompare(a)); // 역순으로 정렬
+  document.getElementById("output").value = lines.join('\n');
+}
+
+document.getElementById("copyButton").addEventListener("click", function() {
+  var textToCopy = document.getElementById("output").value;
+  var textArea = document.createElement("textarea");
+  textArea.value = textToCopy;
+  document.body.appendChild(textArea);
+  textArea.select();
+  document.execCommand('copy');
+  document.body.removeChild(textArea);
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container mt-5">
+  <h1>중복 라인 제거</h1>
+  <div class="row">
+    <div class="col-md-6">
+      <div class="form-group">
+        <textarea id="input" class="form-control" rows="20" cols="30" oninput="updateOriginalCount()"></textarea>
+        <p class="mt-2">원래의 항목 수: <span id="originalCount">0</span></p>
+        <button class="btn btn-primary" onclick="removeDuplicates()">중복 제거</button>
+      </div>
+    </div>
+    <div class="col-md-6">
+      <div class="form-group">
+        <textarea id="output" class="form-control" rows="20" cols="30" readonly></textarea>
+        <p class="mt-2">중복 제거된 항목 수: <span id="countMessage">0</span></p>
+        <button class="btn btn-success" id="copyButton">복사</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function updateOriginalCount() {
+  var inputText = document.getElementById("input").value;
+  var lines = inputText.split('\n');
+  var originalCount = lines.length;
+  var originalCountElement = document.getElementById("originalCount");
+  originalCountElement.textContent = originalCount;
+}
+
+function removeDuplicates() {
+  var inputText = document.getElementById("input").value;
+
+  if (inputText.trim() === '') {
+    alert("입력란이 비어 있습니다.");
+    return;
+  }
+
+  var lines = inputText.split('\n');
+  var originalCount = lines.length;
+  var uniqueLines = Array.from(new Set(lines));
+  var output = document.getElementById("output");
+  var copyButton = document.getElementById("copyButton");
+  var countMessage = document.getElementById("countMessage");
+  
+  output.value = ''; // 출력을 초기화
+
+  uniqueLines.forEach(function(line, index) {
+    if (line.trim() !== '') {
+      output.value += line;
+      if (index < uniqueLines.length - 1) {
+        output.value += "\n";
+      }
+    }
+  });
+
+  var count = uniqueLines.length;
+  countMessage.textContent = count;
+
+  // 복사 버튼을 누를 때 중복 제거된 항목을 클립보드로 복사
+  copyButton.addEventListener("click", function() {
+    var textToCopy = output.value;
+    var textArea = document.createElement("textarea");
+    textArea.value = textToCopy;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+  });
+}
+</script>
+</body>
+</html>
