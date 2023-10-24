@@ -32,7 +32,7 @@
       margin-bottom: 15px;
     }
     button {
-      display: block;
+      display: inline-block;
       margin: 0 auto;
       padding: 10px 20px;
       background-color: #4CAF50;
@@ -42,31 +42,22 @@
       cursor: pointer;
       transition: background-color 0.3s;
     }
-    button:hover {
+    .common-button:hover {
       background-color: #45a049;
     }
+    .disabled-button {
+      background-color: #ccc;
+      color: #666;
+      cursor: not-allowed;
+    }
+    p {
+      display: inline-block;
+    }
+
     pre {
       background-color: #f4f4f4;
       padding: 10px;
       overflow: auto;
-    }
-    .download-btn {
-      display: inline-block;
-      padding: 10px 20px;
-      background-color: #4CAF50;
-      color: #fff;
-      text-decoration: none;
-      border-radius: 4px;
-      transition: background-color 0.3s;
-      pointer-events: none;
-      opacity: 0.5;
-    }
-    .download-btn.active {
-      pointer-events: auto;
-      opacity: 1;
-    }
-    .download-btn:hover {
-      background-color: #45a049;
     }
   </style>
 
@@ -97,19 +88,17 @@
 folder01,192.168.0.1
 folder02,0.0.0.0"></textarea>
   </div>
-<button onclick="generateXml()">Generate XML</button>
-
+  <button onclick="generateXml()" class="common-button">Generate XML</button>
+  <p>→</p>
+  <button onclick="downloadXml()" id="download-button" class="disabled-button" disabled>Download XML</button>
   <pre id="output" class="language-xml language-markup"></pre>
-<a id="download-link" class="download-btn">Download XML</a>
 
   <script>
     function generateXml() {
       var USER = document.getElementById("user").value || "root";
       var PORT = parseInt(document.getElementById("port").value) || 22;
 
-      var inputData = document.getElementById("input").value || `folder01,127.0.0.1
-folder01,192.168.0.1
-folder02,0.0.0.0`;
+      var inputData = document.getElementById("input").value || `folder01,127.0.0.1\nfolder01,192.168.0.1\nfolder02,0.0.0.0`;
 
       var inputLineList = inputData.split("\n");
 
@@ -149,14 +138,18 @@ folder02,0.0.0.0`;
       document.getElementById("output").textContent = result;
       Prism.highlightElement(document.getElementById("output"));
 
+      var downloadButton = document.getElementById("download-button");
+      downloadButton.classList.remove("disabled-button");
+      downloadButton.disabled = false;
+    }
+    function downloadXml() {
+      var result = document.getElementById("output").textContent;
       var xmlFile = new Blob([result], {type: "application/xml"});
-      var downloadLink = document.getElementById("download-link");
+      var downloadLink = document.createElement('a');
       downloadLink.href = URL.createObjectURL(xmlFile);
       downloadLink.download = "output_" + getCurrentDate() + ".xml";
-
-      downloadLink.classList.add("active");
+      downloadLink.click();
     }
-
     function getCurrentDate() {
       var currentDate = new Date();
       var year = currentDate.getFullYear();
