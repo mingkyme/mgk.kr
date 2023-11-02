@@ -86,7 +86,7 @@
     <label for="input">Input:</label>
     <textarea id="input" rows="10" placeholder="folder01,127.0.0.1
 folder01,192.168.0.1
-folder02,0.0.0.0"></textarea>
+folder02 (\t) 1.1.1.1"></textarea>
   </div>
   <button onclick="generateXml()" class="common-button">Generate XML</button>
   <p>→</p>
@@ -98,7 +98,7 @@ folder02,0.0.0.0"></textarea>
       var USER = document.getElementById("user").value || "root";
       var PORT = parseInt(document.getElementById("port").value) || 22;
 
-      var inputData = document.getElementById("input").value || `folder01,127.0.0.1\nfolder01,192.168.0.1\nfolder02,0.0.0.0`;
+      var inputData = document.getElementById("input").value || `folder01,127.0.0.1\nfolder01,192.168.0.1\nfolder02\t1.1.1.1`;
 
       var inputLineList = inputData.split("\n");
 
@@ -107,6 +107,9 @@ folder02,0.0.0.0"></textarea>
       var obj = {};
       inputLineList.forEach(line => {
         var values = line.split(",");
+        if (values.length == 1) {
+          values = line.split("\t");
+        }
         var folderName = values[0].trim();
         var serverName = values[1].trim();
 
