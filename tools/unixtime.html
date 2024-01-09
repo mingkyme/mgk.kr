@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Time Converter</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f4f4f4;
+    }
+
+    #container {
+      text-align: center;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .row {
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    input {
+      margin-right: 10px;
+      padding: 10px;
+      width: calc(100% - 10px);
+      box-sizing: border-box;
+      display: inline-block;
+    }
+
+    .copy-button {
+      padding: 10px 20px;
+      cursor: pointer;
+      border: none;
+      background-color: #3498db;
+      color: #fff;
+      font-size: 16px;
+      border-radius: 5px;
+      margin-left: 10px;
+    }
+
+    .copy-button:hover {
+      background-color: #2980b9;
+    }
+
+    .copy-button i {
+      margin-right: 5px;
+    }
+
+    .switch-button {
+      padding: 10px 20px;
+      cursor: pointer;
+      border: none;
+      background-color: #2ecc71;
+      color: #fff;
+      font-size: 16px;
+      border-radius: 5px;
+      margin-top: 20px;
+    }
+
+    .switch-button:hover {
+      background-color: #27ae60;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="container">
+    <div class="row">
+      <label for="unixInput">Unix Time</label>
+
+    </div>
+    <div class="row">
+      <input type="number" id="unixInput" oninput="oninputByUnix()">
+      <button class="copy-button" onclick="copyUnixValue()"><i class="fas fa-copy"></i> Copy</button>
+    </div>
+
+    <button class="switch-button" onclick="switchValues()">Switch</button>
+
+    <div class="row">
+      <input type="text" id="humanInput" oninput="oninputByHuman()" disabled>
+      <button class="copy-button" onclick="copyHumanValue()"><i class="fas fa-copy"></i> Copy</button>
+    </div>
+    <div class="row">
+      <label for="humanInput">(YYYY-MM-DD HH:MM:SS)</label>
+    </div>
+  </div>
+  <script>
+    var isUnix = true;
+    var unixInput = document.getElementById('unixInput');
+    var humanInput = document.getElementById('humanInput');
+    function unixToHumanTime() {
+      var inputAsUnixTime = new Date(unixInput.value * 1000); // Assuming left input is either Unix time or human-readable time
+
+      var year = inputAsUnixTime.getFullYear();
+      var month = "0" + (inputAsUnixTime.getMonth() + 1);
+      var date = "0" + inputAsUnixTime.getDate();
+
+      // Hours part from the timestamp
+      var hours = "0" + inputAsUnixTime.getHours();
+      // Minutes part from the timestamp
+      var minutes = "0" + inputAsUnixTime.getMinutes();
+      // Seconds part from the timestamp
+      var seconds = "0" + inputAsUnixTime.getSeconds();
+
+      var formattedDate =
+        year +
+        "-" +
+        month.substr(-2) +
+        "-" +
+        date.substr(-2) +
+        " " +
+        hours.substr(-2) +
+        ":" +
+        minutes.substr(-2) +
+        ":" +
+        seconds.substr(-2);
+      humanInput.value = formattedDate;
+    }
+
+    function humanTimeToUnix() {
+      if (humanInput.value.trim() === '') {
+        unixInput.value = '';
+        return;
+      }
+
+      var inputAsUnixTime = new Date(humanInput.value); // Assuming left input is either Unix time or human-readable time
+      tempUnixTime = inputAsUnixTime.getTime();
+      unixInput.value = tempUnixTime ? tempUnixTime / 1000 : 0;
+    }
+
+    function switchValues() {
+      isUnix = !isUnix;
+      if (isUnix) {
+        unixInput.disabled = false;
+        humanInput.disabled = true;
+      } else {
+        unixInput.disabled = true;
+        humanInput.disabled = false;
+      }
+
+    }
+    function oninputByUnix() {
+      if (isUnix) {
+        unixToHumanTime();
+      }
+    }
+    function oninputByHuman() {
+      if (!isUnix) {
+        humanTimeToUnix();
+      }
+    }
+    function copyHumanValue() {
+      var copyText = document.getElementById("humanInput");
+      if (copyText.disabled) {
+        copyText.disabled = false;
+        copyText.select();
+        document.execCommand("copy");
+        copyText.disabled = true;
+      } else {
+        copyText.select();
+        document.execCommand("copy");
+      }
+    }
+
+    function copyUnixValue() {
+      var copyText = document.getElementById("unixInput");
+      if (copyText.disabled) {
+        copyText.disabled = false;
+        copyText.select();
+        document.execCommand("copy");
+        copyText.disabled = true;
+      } else {
+        copyText.select();
+        document.execCommand("copy");
+      }
+    }
+    unixInput.value = Math.floor(Date.now() / 1000);
+    unixToHumanTime();
+  </script>
+
+</body>
+
+</html>
