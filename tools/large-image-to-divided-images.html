@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>큰 이미지를 A4로 출력</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background-color: #333;
+            color: white;
+            padding: 1em;
+        }
+        h1 {
+            margin: 0;
+            padding: 0;
+        }
+        main {
+            margin: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 20px;
+        }
+        input[type="file"] {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            margin-top: 20px;
+        }
+
+        /* 모바일 화면에 대응하는 CSS */
+        @media only screen and (max-width: 600px) {
+            main {
+                margin: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>큰 이미지를 A4로 출력</h1>
+    </header>
+
+    <main>
+        <form id="uploadForm">
+            <input type="file" id="imageInput" accept=".jpg" name="file" />
+            <button type="button" onclick="uploadImage()">이미지 업로드</button>
+            <p style="color: #888; font-size: 14px;">* JPG 파일만 업로드 가능합니다.</p>
+        </form>
+
+        <div id="result"></div>
+    </main>
+
+    <script>
+        function saveFile(blob, filename) {
+            var a = document.createElement('a');
+            a.href = window.URL.createObjectURL(blob);
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function uploadImage() {
+            var form = document.getElementById('uploadForm');
+            var resultDiv = document.getElementById('result');
+            var formData = new FormData(form);
+
+            fetch('https://api.mgk.kr/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.blob())
+            .then(blob => saveFile(blob, "result.zip"))
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+</body>
+</html>
