@@ -80,6 +80,11 @@
         </form>
 
         <div id="result"></div>
+        <div id="manual">
+            <img width="400px" src="../images/large-pdf-to-divided-images/1.png" />
+            <img width="400px" src="../images/large-pdf-to-divided-images/2.png" />
+            <img width="400px" src="../images/large-pdf-to-divided-images/3.png" />
+        </div>
     </main>
 
     <script>
@@ -92,18 +97,21 @@
             document.body.removeChild(a);
         }
 
-        function uploadPDF() {
+        async function uploadPDF() {
             var form = document.getElementById('uploadForm');
-            var resultDiv = document.getElementById('result');
             var formData = new FormData(form);
-
-            fetch('https://api.mgk.kr/upload', {
+            if (formData.get("file").size == 0){
+                alert("파일을 지정해주세요")
+                return;
+            }
+            let response = await fetch('https://api.mgk.kr/upload', {
                 method: 'POST',
                 body: formData
             })
-            .then(response => response.blob())
-            .then(blob => saveFile(blob, "result.pdf"))
-            .catch(error => console.error('Error:', error));
+
+            if (response.ok){
+                saveFile(await response.blob(), "result.pdf") 
+            }
         }
     </script>
 </body>
