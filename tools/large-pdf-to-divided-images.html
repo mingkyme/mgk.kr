@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>큰 이미지를 A4로 출력</title>
+    <title>큰 PDF를 A4로 출력</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -70,14 +70,13 @@
 </head>
 <body>
     <header>
-        <h1>큰 이미지를 A4로 출력</h1>
+        <h1>큰 PDF를 A4로 출력</h1>
     </header>
 
     <main>
         <form id="uploadForm">
-            <input type="file" id="imageInput" accept=".jpg" name="file" />
-            <button type="button" onclick="uploadImage()">이미지 업로드</button>
-            <p style="color: #888; font-size: 14px;">* JPG 파일만 업로드 가능합니다.</p>
+            <input type="file" id="imageInput" accept="application/pdf" name="file" />
+            <button type="button" onclick="uploadPDF()">PDF 업로드</button>
         </form>
 
         <div id="result"></div>
@@ -93,7 +92,7 @@
             document.body.removeChild(a);
         }
 
-        function uploadImage() {
+        function uploadPDF() {
             var form = document.getElementById('uploadForm');
             var resultDiv = document.getElementById('result');
             var formData = new FormData(form);
@@ -103,7 +102,7 @@
                 body: formData
             })
             .then(response => response.blob())
-            .then(blob => saveFile(blob, "result.zip"))
+            .then(blob => saveFile(blob, "result.pdf"))
             .catch(error => console.error('Error:', error));
         }
     </script>
