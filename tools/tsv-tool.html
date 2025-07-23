@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>^I를 탭 및 줄바꿈으로 변환</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; }
+    textarea { width: 100%; height: 200px; margin-bottom: 10px; font-family: monospace; }
+    button { padding: 10px 20px; font-size: 16px; }
+  </style>
+</head>
+<body>
+  <h2>^I를 탭 및 줄바꿈으로 변환</h2>
+  <p>아래 입력창에 <strong>cat -T 출력 값</strong>을 붙여넣고 "변환" 버튼을 누르세요.</p>
+
+  <textarea id="input" placeholder="^I로 표시된 텍스트를 여기에 붙여넣기"></textarea>
+  <button onclick="convert()">변환</button>
+
+  <h3>결과 1: 탭(Tab)으로 구분</h3>
+  <textarea id="output-tab" readonly></textarea>
+
+  <h3>결과 2: 줄바꿈(Line break)으로 구분</h3>
+  <textarea id="output-linebreak" readonly></textarea>
+
+  <script>
+    function convert() {
+      const input = document.getElementById("input").value;
+      const lines = input.split("\n");
+
+      const tabConverted = lines.map(line => {
+        return line.replace(/\^I/g, "\t");
+      });
+
+      const linebreakConverted = lines.map(line => {
+        return line.replace(/\^I/g, "\n");
+      });
+
+      document.getElementById("output-tab").value = tabConverted.join("\n");
+      document.getElementById("output-linebreak").value = linebreakConverted.join("\n");
+    }
+  </script>
+</body>
+</html>
