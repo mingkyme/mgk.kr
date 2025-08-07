@@ -2,42 +2,292 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>^I를 탭 및 줄바꿈으로 변환</title>
+   <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-3XBQJZ5SYY"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-3XBQJZ5SYY');
+    </script>
+    <script>
+        (function () { var w = window; if (w.ChannelIO) { return w.console.error("ChannelIO script included twice."); } var ch = function () { ch.c(arguments); }; ch.q = []; ch.c = function (args) { ch.q.push(args); }; w.ChannelIO = ch; function l() { if (w.ChannelIOInitialized) { return; } w.ChannelIOInitialized = true; var s = document.createElement("script"); s.type = "text/javascript"; s.async = true; s.src = "https://cdn.channel.io/plugin/ch-plugin-web.js"; var x = document.getElementsByTagName("script")[0]; if (x.parentNode) { x.parentNode.insertBefore(s, x); } } if (document.readyState === "complete") { l(); } else { w.addEventListener("DOMContentLoaded", l); w.addEventListener("load", l); } })();
+
+        ChannelIO('boot', {
+            "pluginKey": "b648da15-80e6-426f-a5df-5f0b22642b78"
+        });
+    </script>
   <style>
-    body { font-family: sans-serif; padding: 20px; }
-    textarea { width: 100%; height: 200px; margin-bottom: 10px; font-family: monospace; }
-    button { padding: 10px 20px; font-size: 16px; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 15px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+    
+    .header {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      color: white;
+      padding: 40px;
+      text-align: center;
+    }
+    
+    .header h1 {
+      font-size: 2.5rem;
+      margin-bottom: 10px;
+      font-weight: 600;
+    }
+    
+    .header p {
+      font-size: 1.1rem;
+      opacity: 0.9;
+    }
+    
+    .content {
+      padding: 40px;
+    }
+    
+    .input-section {
+      margin-bottom: 30px;
+    }
+    
+    .input-label {
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #4f46e5;
+      margin-bottom: 10px;
+      display: block;
+    }
+    
+    textarea {
+      width: 100%;
+      min-height: 150px;
+      padding: 15px;
+      border: 2px solid #e5e7eb;
+      border-radius: 10px;
+      font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+      font-size: 14px;
+      resize: vertical;
+      transition: all 0.3s ease;
+      background: #f9fafb;
+    }
+    
+    textarea:focus {
+      outline: none;
+      border-color: #4f46e5;
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+      background: white;
+    }
+    
+    .button-container {
+      text-align: center;
+      margin: 30px 0;
+    }
+    
+    .convert-btn {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+      color: white;
+      border: none;
+      padding: 15px 40px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(79, 70, 229, 0.3);
+    }
+    
+    .convert-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(79, 70, 229, 0.4);
+    }
+    
+    .convert-btn:active {
+      transform: translateY(0);
+    }
+    
+    .results {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-top: 30px;
+    }
+    
+    .result-section {
+      background: #f9fafb;
+      border-radius: 10px;
+      padding: 20px;
+      border: 1px solid #e5e7eb;
+    }
+    
+    .result-section h3 {
+      color: #374151;
+      margin-bottom: 15px;
+      font-size: 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .result-section textarea {
+      min-height: 120px;
+      background: white;
+      border: 1px solid #d1d5db;
+    }
+    
+    .copy-btn {
+      background: #10b981;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+      margin-top: 10px;
+    }
+    
+    .copy-btn:hover {
+      background: #059669;
+    }
+    
+    .copy-btn.copied {
+      background: #6b7280;
+    }
+    
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 2rem;
+      }
+      
+      .content {
+        padding: 20px;
+      }
+      
+      .results {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+    }
   </style>
 </head>
 <body>
-  <h2>^I를 탭 및 줄바꿈으로 변환</h2>
-  <p>아래 입력창에 <strong>cat -T 출력 값</strong>을 붙여넣고 "변환" 버튼을 누르세요.</p>
-
-  <textarea id="input" placeholder="^I로 표시된 텍스트를 여기에 붙여넣기"></textarea>
-  <button onclick="convert()">변환</button>
-
-  <h3>결과 1: 탭(Tab)으로 구분</h3>
-  <textarea id="output-tab" readonly></textarea>
-
-  <h3>결과 2: 줄바꿈(Line break)으로 구분</h3>
-  <textarea id="output-linebreak" readonly></textarea>
+  <div class="container">
+    <div class="header">
+      <h1>^I를 탭 및 줄바꿈으로 변환</h1>
+      <p>cat -T 출력 값을 실제 탭과 줄바꿈으로 변환하는 도구</p>
+    </div>
+    
+    <div class="content">
+      <div class="input-section">
+        <label class="input-label">입력 텍스트</label>
+        <textarea id="input" placeholder="^I로 표시된 텍스트를 여기에 붙여넣기..."></textarea>
+      </div>
+      
+      <div class="button-container">
+        <button class="convert-btn" onclick="convert()">변환하기</button>
+      </div>
+      
+      <div class="results">
+        <div class="result-section">
+          <h3>📋 탭(Tab)으로 구분</h3>
+          <textarea id="output-tab" readonly></textarea>
+          <button class="copy-btn" onclick="copyToClipboard('output-tab', this)">복사</button>
+        </div>
+        
+        <div class="result-section">
+          <h3>📄 줄바꿈으로 구분</h3>
+          <textarea id="output-linebreak" readonly></textarea>
+          <button class="copy-btn" onclick="copyToClipboard('output-linebreak', this)">복사</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script>
     function convert() {
       const input = document.getElementById("input").value;
+      
+      if (!input.trim()) {
+        alert("입력 텍스트를 입력해 주세요.");
+        return;
+      }
+      
       const lines = input.split("\n");
 
       const tabConverted = lines.map(line => {
         return line.replace(/\^I/g, "\t");
       });
 
-      const linebreakConverted = lines.map(line => {
+      const lineBreakConverted = lines.map(line => {
         return line.replace(/\^I/g, "\n");
       });
 
       document.getElementById("output-tab").value = tabConverted.join("\n");
-      document.getElementById("output-linebreak").value = linebreakConverted.join("\n");
+      document.getElementById("output-linebreak").value = lineBreakConverted.join("\n");
     }
+    
+    function copyToClipboard(textareaId, button) {
+      const textarea = document.getElementById(textareaId);
+      const text = textarea.value;
+      
+      if (!text.trim()) {
+        alert("복사할 내용이 없습니다. 먼저 변환을 실행해 주세요.");
+        return;
+      }
+      
+      navigator.clipboard.writeText(text).then(() => {
+        const originalText = button.textContent;
+        button.textContent = "복사됨!";
+        button.classList.add("copied");
+        
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.classList.remove("copied");
+        }, 2000);
+      }).catch(err => {
+        console.error('복사 실패:', err);
+        
+        textarea.select();
+        textarea.setSelectionRange(0, 99999);
+        document.execCommand('copy');
+        
+        const originalText = button.textContent;
+        button.textContent = "복사됨!";
+        button.classList.add("copied");
+        
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.classList.remove("copied");
+        }, 2000);
+      });
+    }
+    
+    document.getElementById("input").addEventListener("keydown", function(e) {
+      if (e.ctrlKey && e.key === "Enter") {
+        convert();
+      }
+    });
   </script>
 </body>
 </html>
