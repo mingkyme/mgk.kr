@@ -36,4 +36,14 @@
     <lastmod>2024-01-31T23:28:25+00:00</lastmod>
     <priority>0.80</priority>
   </url>
+  <url>
+    <loc>https://mgk.kr/tools/tsv-tool.html</loc>
+    <lastmod>2025-01-01T00:00:00+00:00</lastmod>
+    <priority>0.80</priority>
+  </url>
+  <url>
+    <loc>https://mgk.kr/tools/base64.html</loc>
+    <lastmod>2026-07-24T00:00:00+00:00</lastmod>
+    <priority>0.80</priority>
+  </url>
 </urlset>
