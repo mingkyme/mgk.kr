@@ -1,0 +1,70 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+<ToolLayout title="SecureCRT Config Maker" description="폴더와 서버 목록을 검증해 안전하게 이스케이프된 SecureCRT 세션 XML을 생성합니다." eyebrow="SSH · XML">
+  <form id="securecrt-form" class="form-grid" novalidate>
+    <div class="two-column form-grid">
+      <div class="field">
+        <label for="securecrt-username">사용자 이름</label>
+        <input id="securecrt-username" value="root" autocomplete="username" />
+      </div>
+      <div class="field">
+        <label for="securecrt-port">SSH 포트</label>
+        <input id="securecrt-port" type="number" min="1" max="65535" value="22" inputmode="numeric" />
+      </div>
+    </div>
+    <div class="field">
+      <label for="securecrt-input">세션 목록</label>
+      <textarea id="securecrt-input" placeholder={'production,server.example.com\ndevelopment\t2001:db8::1'}></textarea>
+      <p class="hint">한 줄에 “폴더,서버” 또는 “폴더[TAB]서버”를 입력하세요. 빈 줄은 무시합니다.</p>
+    </div>
+    <div class="actions">
+      <button class="button" type="submit">XML 생성</button>
+      <button class="button secondary" id="securecrt-download" type="button" disabled>XML 다운로드</button>
+    </div>
+    <p id="securecrt-error" class="error" role="alert"></p>
+    <div class="field">
+      <label for="securecrt-output">생성 결과</label>
+      <textarea id="securecrt-output" readonly spellcheck="false"></textarea>
+    </div>
+  </form>
+</ToolLayout>
+<script>
+  import { buildSecureCrtXml, parseSecureCrtRows } from '../../lib/securecrt';
+  const form = document.querySelector<HTMLFormElement>('#securecrt-form')!;
+  const input = document.querySelector<HTMLTextAreaElement>('#securecrt-input')!;
+  const username = document.querySelector<HTMLInputElement>('#securecrt-username')!;
+  const port = document.querySelector<HTMLInputElement>('#securecrt-port')!;
+  const output = document.querySelector<HTMLTextAreaElement>('#securecrt-output')!;
+  const error = document.querySelector<HTMLElement>('#securecrt-error')!;
+  const download = document.querySelector<HTMLButtonElement>('#securecrt-download')!;
+  let xml = '';
+  const today = () => {
+    const date = new Date();
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  };
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    error.textContent = '';
+    output.value = '';
+    download.disabled = true;
+    try {
+      const rows = parseSecureCrtRows(input.value);
+      if (rows.length === 0) throw new Error('세션을 한 개 이상 입력해 주세요.');
+      xml = buildSecureCrtXml(rows, username.value, Number(port.value), today());
+      output.value = xml;
+      download.disabled = false;
+    } catch (cause) {
+      error.textContent = cause instanceof Error ? cause.message : 'XML을 생성하지 못했습니다.';
+    }
+  });
+  download.addEventListener('click', () => {
+    if (!xml) return;
+    const url = URL.createObjectURL(new Blob([xml], { type: 'application/xml;charset=utf-8' }));
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = `securecrt-${today()}.xml`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  });
+</script>

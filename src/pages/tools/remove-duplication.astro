@@ -1,0 +1,37 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+<ToolLayout title="중복 라인 제거" description="첫 번째 항목과 원래 순서를 유지하면서 빈 줄과 중복 라인을 제거합니다." eyebrow="Text utility">
+  <div class="form-grid">
+    <div class="two-column form-grid">
+      <div class="field">
+        <label for="dedupe-input">입력</label>
+        <textarea id="dedupe-input" placeholder={'apple\nbanana\napple'}></textarea>
+      </div>
+      <div class="field">
+        <label for="dedupe-output">결과</label>
+        <textarea id="dedupe-output" readonly></textarea>
+      </div>
+    </div>
+    <div class="actions">
+      <button class="button" id="dedupe-run" type="button">중복 제거</button>
+      <button class="button secondary" id="dedupe-copy" type="button">결과 복사</button>
+    </div>
+    <p id="dedupe-stats" class="stats" aria-live="polite">입력 0 · 출력 0 · 제거 0</p>
+  </div>
+</ToolLayout>
+<script>
+  import { deduplicateLines } from '../../lib/lines';
+  import { copyFrom } from '../../lib/clipboard';
+  const input = document.querySelector<HTMLTextAreaElement>('#dedupe-input')!;
+  const output = document.querySelector<HTMLTextAreaElement>('#dedupe-output')!;
+  const stats = document.querySelector<HTMLElement>('#dedupe-stats')!;
+  const run = document.querySelector<HTMLButtonElement>('#dedupe-run')!;
+  const copy = document.querySelector<HTMLButtonElement>('#dedupe-copy')!;
+  run.addEventListener('click', () => {
+    const result = deduplicateLines(input.value);
+    output.value = result.text;
+    stats.textContent = `입력 ${result.inputCount} · 출력 ${result.outputCount} · 제거 ${result.removedCount}`;
+  });
+  copy.addEventListener('click', () => void copyFrom(copy, output.value));
+</script>

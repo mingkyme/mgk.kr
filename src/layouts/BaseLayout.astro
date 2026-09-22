@@ -1,0 +1,139 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  title: string;
+  description: string;
+  image?: string;
+}
+
+const { title, description, image = '/favicon.svg' } = Astro.props;
+const canonicalPath = Astro.url.pathname === '/index.html' ? '/' : Astro.url.pathname;
+const canonical = new URL(canonicalPath, Astro.site);
+const year = new Date().getFullYear();
+const fullTitle = title === 'mgk.kr' ? title : `${title} · mgk.kr`;
+---
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="color-scheme" content="light dark" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; worker-src 'self' blob:" />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="ko_KR" />
+    <meta property="og:site_name" content="mgk.kr" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={new URL(image, Astro.site)} />
+    <title>{fullTitle}</title>
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">본문으로 건너뛰기</a>
+    <header class="site-header">
+      <nav class="nav" aria-label="주요 탐색">
+        <a class="brand" href="/">mgk.kr</a>
+        <div class="nav-links">
+          <a href="/" class="always">도구</a>
+          <a href="/privacy.html">개인정보</a>
+          <a href="mailto:mingkyme@gmail.com">문의</a>
+          <button class="icon-button" id="theme-toggle" type="button" aria-label="색상 테마 전환" title="색상 테마 전환">◐</button>
+        </div>
+      </nav>
+    </header>
+    <main id="main-content" class="site-main">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <span>© {year} mgk.kr</span>
+        <div class="footer-links">
+          <a href="/privacy.html">개인정보 처리방침</a>
+          <a href="mailto:mingkyme@gmail.com">mingkyme@gmail.com</a>
+          <button id="consent-reset" type="button">쿠키 설정 초기화</button>
+        </div>
+      </div>
+    </footer>
+    <section id="cookie-banner" class="cookie-banner" role="dialog" aria-modal="false" aria-labelledby="cookie-title" hidden>
+      <h2 id="cookie-title">분석 쿠키 설정</h2>
+      <p>사이트 개선을 위해 익명 Google Analytics 데이터를 수집할 수 있습니다. 동의 전에는 Google 태그를 불러오지 않습니다.</p>
+      <div class="actions">
+        <button class="button" id="consent-accept" type="button">동의</button>
+        <button class="button secondary" id="consent-decline" type="button">거부</button>
+        <a class="button ghost" href="/privacy.html">개인정보 처리방침 보기</a>
+      </div>
+    </section>
+    <script>
+      const GA_ID = 'G-3XBQJZ5SYY';
+      const CONSENT_KEY = 'mgk-analytics-consent';
+      const analyticsWindow = window as unknown as Window & { dataLayer: unknown[][] } & Record<string, unknown>;
+      const dataLayer = analyticsWindow.dataLayer = analyticsWindow.dataLayer || [];
+      function gtag(...args: unknown[]) { dataLayer.push(args); }
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        analytics_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        wait_for_update: 500,
+      });
+
+      const banner = document.querySelector<HTMLElement>('#cookie-banner');
+      const setAnalyticsDisabled = (disabled: boolean) => {
+        analyticsWindow[`ga-disable-${GA_ID}`] = disabled;
+      };
+      const denyAnalytics = () => {
+        setAnalyticsDisabled(true);
+        gtag('consent', 'update', { analytics_storage: 'denied' });
+      };
+      const loadAnalytics = () => {
+        setAnalyticsDisabled(false);
+        gtag('consent', 'update', { analytics_storage: 'granted' });
+        if (document.querySelector(`script[data-ga-id="${GA_ID}"]`)) return;
+        gtag('js', new Date());
+        gtag('config', GA_ID, { anonymize_ip: true });
+        const script = document.createElement('script');
+        script.async = true;
+        script.dataset.gaId = GA_ID;
+        script.src = `https://www.googletagmanager.com/gtag/js?id=${encodeURIComponent(GA_ID)}`;
+        document.head.append(script);
+      };
+      const setConsent = (value: 'accepted' | 'declined') => {
+        localStorage.setItem(CONSENT_KEY, value);
+        if (banner) banner.hidden = true;
+        if (value === 'accepted') loadAnalytics();
+        else denyAnalytics();
+      };
+      document.querySelector('#consent-accept')?.addEventListener('click', () => setConsent('accepted'));
+      document.querySelector('#consent-decline')?.addEventListener('click', () => setConsent('declined'));
+      document.querySelector('#consent-reset')?.addEventListener('click', () => {
+        localStorage.removeItem(CONSENT_KEY);
+        denyAnalytics();
+        if (banner) banner.hidden = false;
+        document.querySelector<HTMLElement>('#consent-accept')?.focus();
+      });
+      const preference = localStorage.getItem(CONSENT_KEY);
+      if (preference === 'accepted') loadAnalytics();
+      else {
+        denyAnalytics();
+        if (preference !== 'declined' && banner) banner.hidden = false;
+      }
+
+      const themeButton = document.querySelector<HTMLButtonElement>('#theme-toggle');
+      const savedTheme = localStorage.getItem('mgk-theme');
+      if (savedTheme === 'light' || savedTheme === 'dark') document.documentElement.dataset.theme = savedTheme;
+      themeButton?.addEventListener('click', () => {
+        const current = document.documentElement.dataset.theme;
+        const systemDark = matchMedia('(prefers-color-scheme: dark)').matches;
+        const next = current ? (current === 'dark' ? 'light' : 'dark') : (systemDark ? 'light' : 'dark');
+        document.documentElement.dataset.theme = next;
+        localStorage.setItem('mgk-theme', next);
+      });
+    </script>
+  </body>
+</html>

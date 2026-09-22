@@ -1,0 +1,68 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+<ToolLayout title="Base64 인코더·디코더" description="TextEncoder와 TextDecoder로 Unicode 텍스트를 표준 또는 URL-safe Base64로 변환합니다." eyebrow="Base64 · UTF-8">
+  <div class="form-grid">
+    <div class="actions" role="group" aria-label="변환 모드">
+      <button class="button" id="mode-encode" type="button" aria-pressed="true">인코드 모드</button>
+      <button class="button secondary" id="mode-decode" type="button" aria-pressed="false">디코드 모드</button>
+      <label><input id="url-safe" type="checkbox" /> URL-safe 인코딩</label>
+    </div>
+    <div class="two-column form-grid">
+      <div class="field"><label for="base64-input">입력</label><textarea id="base64-input" placeholder="안녕하세요 👋"></textarea></div>
+      <div class="field"><label for="base64-output">결과</label><textarea id="base64-output" readonly></textarea></div>
+    </div>
+    <div class="actions">
+      <button class="button secondary" id="base64-swap" type="button">입력과 결과 바꾸기</button>
+      <button class="button secondary" id="base64-copy" type="button">결과 복사</button>
+      <label><input id="json-pretty" type="checkbox" /> JSON 보기 좋게</label>
+    </div>
+    <p id="base64-error" class="error" role="alert"></p>
+  </div>
+</ToolLayout>
+<script>
+  import { decodeBase64, encodeBase64, prettyJson } from '../../lib/base64';
+  import { copyFrom } from '../../lib/clipboard';
+  const input = document.querySelector<HTMLTextAreaElement>('#base64-input')!;
+  const output = document.querySelector<HTMLTextAreaElement>('#base64-output')!;
+  const error = document.querySelector<HTMLElement>('#base64-error')!;
+  const encodeButton = document.querySelector<HTMLButtonElement>('#mode-encode')!;
+  const decodeButton = document.querySelector<HTMLButtonElement>('#mode-decode')!;
+  const urlSafe = document.querySelector<HTMLInputElement>('#url-safe')!;
+  const pretty = document.querySelector<HTMLInputElement>('#json-pretty')!;
+  let mode: 'encode' | 'decode' = 'encode';
+  let raw = '';
+  const render = () => {
+    error.textContent = '';
+    if (!input.value) { raw = ''; output.value = ''; return; }
+    try {
+      raw = mode === 'encode' ? encodeBase64(input.value, urlSafe.checked) : decodeBase64(input.value);
+      output.value = pretty.checked ? prettyJson(raw) : raw;
+    } catch (cause) {
+      raw = '';
+      output.value = '';
+      error.textContent = cause instanceof Error ? cause.message : '변환하지 못했습니다.';
+    }
+  };
+  const setMode = (next: 'encode' | 'decode') => {
+    mode = next;
+    encodeButton.classList.toggle('secondary', mode !== 'encode');
+    decodeButton.classList.toggle('secondary', mode !== 'decode');
+    encodeButton.setAttribute('aria-pressed', String(mode === 'encode'));
+    decodeButton.setAttribute('aria-pressed', String(mode === 'decode'));
+    urlSafe.disabled = mode === 'decode';
+    render();
+  };
+  encodeButton.addEventListener('click', () => setMode('encode'));
+  decodeButton.addEventListener('click', () => setMode('decode'));
+  input.addEventListener('input', render);
+  urlSafe.addEventListener('change', render);
+  pretty.addEventListener('change', () => { output.value = pretty.checked ? prettyJson(raw) : raw; });
+  document.querySelector('#base64-swap')?.addEventListener('click', () => {
+    if (!output.value) return;
+    input.value = output.value;
+    setMode(mode === 'encode' ? 'decode' : 'encode');
+  });
+  const copy = document.querySelector<HTMLButtonElement>('#base64-copy')!;
+  copy.addEventListener('click', () => void copyFrom(copy, output.value));
+</script>

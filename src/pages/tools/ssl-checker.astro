@@ -1,0 +1,59 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+<ToolLayout title="SSL 명령어 생성기" description="엔드포인트와 SNI 도메인을 검증하고 셸에서 안전하게 인용된 OpenSSL 확인 명령을 생성합니다." eyebrow="TLS · OpenSSL">
+  <form id="ssl-form" class="form-grid" novalidate>
+    <div class="two-column form-grid">
+      <div class="field">
+        <label for="ssl-endpoints">엔드포인트</label>
+        <textarea id="ssl-endpoints" placeholder={'1.1.1.1\n2001:db8::1\nedge.example.com'}></textarea>
+        <p class="hint">IPv4, IPv6 또는 호스트명 · 한 줄에 하나</p>
+      </div>
+      <div class="field">
+        <label for="ssl-domains">SNI 도메인</label>
+        <textarea id="ssl-domains" placeholder={'example.com\n*.example.org'}></textarea>
+        <p class="hint">DNS 또는 와일드카드 도메인 · 한 줄에 하나</p>
+      </div>
+    </div>
+    <button class="button" type="submit">명령어 생성</button>
+    <p id="ssl-error" class="error" role="alert"></p>
+    <div class="field">
+      <div class="actions"><label for="ssl-expiry">인증서 만료일</label><button class="button secondary copy" type="button" data-target="ssl-expiry">복사</button></div>
+      <textarea id="ssl-expiry" readonly></textarea>
+    </div>
+    <div class="field">
+      <div class="actions"><label for="ssl-chain">인증서 체인 개수</label><button class="button secondary copy" type="button" data-target="ssl-chain">복사</button></div>
+      <textarea id="ssl-chain" readonly></textarea>
+    </div>
+  </form>
+</ToolLayout>
+<script>
+  import { buildSslCommands, parseSslInputs } from '../../lib/ssl';
+  import { copyFrom } from '../../lib/clipboard';
+  const form = document.querySelector<HTMLFormElement>('#ssl-form')!;
+  const endpoints = document.querySelector<HTMLTextAreaElement>('#ssl-endpoints')!;
+  const domains = document.querySelector<HTMLTextAreaElement>('#ssl-domains')!;
+  const expiry = document.querySelector<HTMLTextAreaElement>('#ssl-expiry')!;
+  const chain = document.querySelector<HTMLTextAreaElement>('#ssl-chain')!;
+  const error = document.querySelector<HTMLElement>('#ssl-error')!;
+  form.addEventListener('submit', (event) => {
+    event.preventDefault();
+    error.textContent = '';
+    expiry.value = '';
+    chain.value = '';
+    try {
+      const parsed = parseSslInputs(endpoints.value, domains.value);
+      const commands = buildSslCommands(parsed.endpoints, parsed.domains);
+      expiry.value = commands.expiry;
+      chain.value = commands.chain;
+    } catch (cause) {
+      error.textContent = cause instanceof Error ? cause.message : '명령어를 생성하지 못했습니다.';
+    }
+  });
+  document.querySelectorAll<HTMLButtonElement>('.copy').forEach((button) => {
+    button.addEventListener('click', () => {
+      const target = document.querySelector<HTMLTextAreaElement>(`#${button.dataset.target}`);
+      if (target) void copyFrom(button, target.value);
+    });
+  });
+</script>

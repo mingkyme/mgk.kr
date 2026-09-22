@@ -1,0 +1,18 @@
+---
+import BaseLayout from './BaseLayout.astro';
+interface Props { title: string; description: string; eyebrow?: string; }
+const { title, description, eyebrow = 'Browser utility' } = Astro.props;
+---
+<BaseLayout title={title} description={description}>
+  <div class="container narrow">
+    <header class="tool-hero">
+      <a class="back-link" href="/" aria-label="도구 목록으로 돌아가기">← 모든 도구</a>
+      <p class="eyebrow">{eyebrow}</p>
+      <h1>{title}</h1>
+      <p class="lede">{description}</p>
+    </header>
+    <section class="card tool-panel">
+      <slot />
+    </section>
+  </div>
+</BaseLayout>

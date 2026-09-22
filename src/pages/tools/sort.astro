@@ -1,0 +1,33 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+<ToolLayout title="라인 정렬" description="빈 줄을 제거하고 한글과 숫자를 자연스럽게 인식해 줄 단위로 정렬합니다." eyebrow="Natural sort · KO">
+  <div class="form-grid">
+    <div class="two-column form-grid">
+      <div class="field"><label for="sort-input">입력</label><textarea id="sort-input" placeholder={'항목10\n가나다\n항목2'}></textarea></div>
+      <div class="field"><label for="sort-output">결과</label><textarea id="sort-output" readonly></textarea></div>
+    </div>
+    <div class="actions">
+      <button class="button" id="sort-asc" type="button">오름차순</button>
+      <button class="button secondary" id="sort-desc" type="button">내림차순</button>
+      <button class="button secondary" id="sort-copy" type="button">결과 복사</button>
+    </div>
+    <p id="sort-stats" class="stats" aria-live="polite">입력 0 · 출력 0</p>
+  </div>
+</ToolLayout>
+<script>
+  import { sortLines } from '../../lib/lines';
+  import { copyFrom } from '../../lib/clipboard';
+  const input = document.querySelector<HTMLTextAreaElement>('#sort-input')!;
+  const output = document.querySelector<HTMLTextAreaElement>('#sort-output')!;
+  const stats = document.querySelector<HTMLElement>('#sort-stats')!;
+  const render = (direction: 'asc' | 'desc') => {
+    const result = sortLines(input.value, direction);
+    output.value = result.text;
+    stats.textContent = `입력 ${result.inputCount} · 출력 ${result.outputCount}`;
+  };
+  document.querySelector('#sort-asc')?.addEventListener('click', () => render('asc'));
+  document.querySelector('#sort-desc')?.addEventListener('click', () => render('desc'));
+  const copy = document.querySelector<HTMLButtonElement>('#sort-copy')!;
+  copy.addEventListener('click', () => void copyFrom(copy, output.value));
+</script>

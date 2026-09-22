@@ -1,0 +1,39 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+<ToolLayout title="TSV Tool" description="cat -T 출력의 ^I 표시를 실제 탭 또는 줄바꿈으로 바꿉니다." eyebrow="TSV · cat -T">
+  <div class="form-grid">
+    <div class="field"><label for="tsv-input">입력</label><textarea id="tsv-input" placeholder="name^Iemail^Irole"></textarea></div>
+    <button class="button" id="tsv-run" type="button">변환</button>
+    <p id="tsv-error" class="error" role="alert"></p>
+    <div class="two-column form-grid">
+      <div class="field"><label for="tsv-tabs">탭으로 변환</label><textarea id="tsv-tabs" readonly></textarea><button class="button secondary copy-tsv" type="button" data-target="tsv-tabs">복사</button></div>
+      <div class="field"><label for="tsv-lines">줄바꿈으로 변환</label><textarea id="tsv-lines" readonly></textarea><button class="button secondary copy-tsv" type="button" data-target="tsv-lines">복사</button></div>
+    </div>
+  </div>
+</ToolLayout>
+<script>
+  import { convertCaretTabs } from '../../lib/tsv';
+  import { copyFrom } from '../../lib/clipboard';
+  const input = document.querySelector<HTMLTextAreaElement>('#tsv-input')!;
+  const tabs = document.querySelector<HTMLTextAreaElement>('#tsv-tabs')!;
+  const lines = document.querySelector<HTMLTextAreaElement>('#tsv-lines')!;
+  const error = document.querySelector<HTMLElement>('#tsv-error')!;
+  document.querySelector('#tsv-run')?.addEventListener('click', () => {
+    error.textContent = '';
+    if (!input.value.trim()) { error.textContent = '변환할 텍스트를 입력해 주세요.'; return; }
+    const result = convertCaretTabs(input.value);
+    tabs.value = result.tabs;
+    lines.value = result.lineBreaks;
+  });
+  input.addEventListener('keydown', (event) => {
+    if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
+      event.preventDefault();
+      document.querySelector<HTMLButtonElement>('#tsv-run')?.click();
+    }
+  });
+  document.querySelectorAll<HTMLButtonElement>('.copy-tsv').forEach((button) => button.addEventListener('click', () => {
+    const target = document.querySelector<HTMLTextAreaElement>(`#${button.dataset.target}`);
+    if (target) void copyFrom(button, target.value);
+  }));
+</script>

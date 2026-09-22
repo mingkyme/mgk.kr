@@ -80,3 +80,11 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/go,macos,windows
 __debug_bin*
+
+### Node / Astro / tests ###
+node_modules/
+dist/
+.astro/
+coverage/
+playwright-report/
+test-results/

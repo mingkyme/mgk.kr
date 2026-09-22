@@ -1,0 +1,67 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+<ToolLayout title="Unix Time 변환" description="Unix 초·밀리초를 자동 감지하거나 직접 선택하고 UTC·로컬 날짜와 양방향으로 변환합니다." eyebrow="Timestamp · ISO 8601">
+  <div class="form-grid">
+    <div class="field">
+      <label for="unix-input">Unix 시간</label>
+      <input id="unix-input" type="text" inputmode="decimal" autocomplete="off" placeholder="1704067200" />
+    </div>
+    <div class="two-column form-grid">
+      <div class="field"><label for="unix-unit">입력 단위</label><select id="unix-unit"><option value="auto">자동 감지</option><option value="seconds">초</option><option value="milliseconds">밀리초</option></select></div>
+      <div class="field"><label for="timezone">표시 시간대</label><select id="timezone"><option value="utc">UTC</option><option value="local">로컬</option></select></div>
+    </div>
+    <div class="actions">
+      <button class="button" id="unix-to-date" type="button">Unix → 날짜</button>
+      <button class="button secondary" id="time-now" type="button">현재 시간</button>
+      <button class="button secondary" id="copy-unix" type="button">Unix 복사</button>
+    </div>
+    <div class="field">
+      <label for="date-input">날짜 또는 ISO 문자열</label>
+      <input id="date-input" type="text" autocomplete="off" placeholder="2024-01-01T00:00:00.000Z" />
+    </div>
+    <div class="field"><label for="output-unit">날짜 → Unix 출력 단위</label><select id="output-unit"><option value="seconds">초</option><option value="milliseconds">밀리초</option></select></div>
+    <div class="actions">
+      <button class="button" id="date-to-unix" type="button">날짜 → Unix</button>
+      <button class="button secondary" id="copy-date" type="button">날짜 복사</button>
+    </div>
+    <p id="time-detected" class="status" aria-live="polite"></p>
+    <p id="time-error" class="error" role="alert"></p>
+  </div>
+</ToolLayout>
+<script>
+  import { formatDate, parseDateInput, parseUnixInput, toUnix, type UnixUnit } from '../../lib/time';
+  import { copyFrom } from '../../lib/clipboard';
+  const unix = document.querySelector<HTMLInputElement>('#unix-input')!;
+  const date = document.querySelector<HTMLInputElement>('#date-input')!;
+  const unit = document.querySelector<HTMLSelectElement>('#unix-unit')!;
+  const timezone = document.querySelector<HTMLSelectElement>('#timezone')!;
+  const outputUnit = document.querySelector<HTMLSelectElement>('#output-unit')!;
+  const error = document.querySelector<HTMLElement>('#time-error')!;
+  const detected = document.querySelector<HTMLElement>('#time-detected')!;
+  const clear = () => { error.textContent = ''; detected.textContent = ''; };
+  const convertUnix = () => {
+    clear();
+    try {
+      const parsed = parseUnixInput(unix.value, unit.value as UnixUnit);
+      date.value = formatDate(parsed.milliseconds, timezone.value as 'utc' | 'local');
+      detected.textContent = `감지 단위: ${parsed.detectedUnit === 'seconds' ? '초' : '밀리초'}`;
+    } catch (cause) { error.textContent = cause instanceof Error ? cause.message : '변환할 수 없습니다.'; }
+  };
+  document.querySelector('#unix-to-date')?.addEventListener('click', convertUnix);
+  timezone.addEventListener('change', () => { if (unix.value) convertUnix(); });
+  document.querySelector('#date-to-unix')?.addEventListener('click', () => {
+    clear();
+    try { unix.value = String(toUnix(parseDateInput(date.value), outputUnit.value as 'seconds' | 'milliseconds')); }
+    catch (cause) { error.textContent = cause instanceof Error ? cause.message : '변환할 수 없습니다.'; }
+  });
+  document.querySelector('#time-now')?.addEventListener('click', () => {
+    unit.value = 'milliseconds';
+    unix.value = String(Date.now());
+    convertUnix();
+  });
+  const copyUnix = document.querySelector<HTMLButtonElement>('#copy-unix')!;
+  const copyDate = document.querySelector<HTMLButtonElement>('#copy-date')!;
+  copyUnix.addEventListener('click', () => void copyFrom(copyUnix, unix.value));
+  copyDate.addEventListener('click', () => void copyFrom(copyDate, date.value));
+</script>

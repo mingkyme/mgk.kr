@@ -1,0 +1,85 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+<ToolLayout title="LL-HLS 지연 측정 타이머" description="카메라로 화면을 촬영해 스트림과 비교할 수 있는 밀리초 벽시계와 경과 시간입니다." eyebrow="Wall clock · Milliseconds">
+  <div id="timer-app" class="timer-stack">
+    <section class="timer-display" aria-labelledby="wall-label">
+      <p id="wall-label" class="timer-label">현재 시각</p>
+      <time id="wall-clock" class="timer-clock timer-clock-large" datetime="">--:--:--.---</time>
+    </section>
+    <div class="timer-grid">
+      <section class="timer-display" aria-labelledby="elapsed-label"><p id="elapsed-label" class="timer-label">경과 시간</p><output id="elapsed" class="timer-clock">0.000s</output></section>
+      <section class="timer-display" aria-labelledby="counter-label"><p id="counter-label" class="timer-label">60초 순환 카운터</p><output id="counter" class="timer-clock">00000</output></section>
+    </div>
+    <div class="actions timer-actions">
+      <button class="button" id="timer-pause" type="button" aria-pressed="false">일시정지</button>
+      <button class="button secondary" id="timer-reset" type="button">리셋</button>
+      <button class="button secondary" id="timer-fullscreen" type="button">전체화면</button>
+    </div>
+    <p id="timer-status" class="status" role="status" aria-live="polite">타이머 실행 중</p>
+  </div>
+</ToolLayout>
+<style>
+  .timer-stack { display: grid; gap: 18px; }
+  .timer-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 18px; }
+  .timer-display { padding: clamp(18px, 4vw, 30px); border-radius: 9px; background: var(--surface-subtle); box-shadow: inset 0 0 0 1px var(--line); text-align: center; }
+  .timer-label { margin: 0 0 12px; color: var(--muted); font: 600 12px ui-monospace, SFMono-Regular, Menlo, monospace; letter-spacing: .08em; text-transform: uppercase; }
+  .timer-clock { display: block; font: 600 clamp(28px, 6vw, 48px)/1 ui-monospace, SFMono-Regular, Menlo, monospace; font-variant-numeric: tabular-nums; }
+  .timer-clock-large { font-size: clamp(40px, 10vw, 88px); }
+  .timer-actions { justify-content: center; }
+  #timer-app:fullscreen { min-height: 100vh; padding: 5vw; align-content: center; background: var(--bg); color: var(--text); }
+  @media (max-width: 620px) { .timer-grid { grid-template-columns: 1fr; } }
+</style>
+<script>
+  const app = document.querySelector<HTMLElement>('#timer-app')!;
+  const wallClock = document.querySelector<HTMLTimeElement>('#wall-clock')!;
+  const elapsed = document.querySelector<HTMLOutputElement>('#elapsed')!;
+  const counter = document.querySelector<HTMLOutputElement>('#counter')!;
+  const pause = document.querySelector<HTMLButtonElement>('#timer-pause')!;
+  const status = document.querySelector<HTMLElement>('#timer-status')!;
+  let base = performance.now();
+  let pausedAt = 0;
+  let isPaused = false;
+  const pad = (value: number, width: number) => String(value).padStart(width, '0');
+  const frame = () => {
+    const now = new Date();
+    wallClock.textContent = `${pad(now.getHours(), 2)}:${pad(now.getMinutes(), 2)}:${pad(now.getSeconds(), 2)}.${pad(now.getMilliseconds(), 3)}`;
+    wallClock.dateTime = now.toISOString();
+    if (!isPaused) {
+      const delta = performance.now() - base;
+      elapsed.value = `${(delta / 1000).toFixed(3)}s`;
+      counter.value = pad(Math.floor(delta) % 60000, 5);
+    }
+    requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+  pause.addEventListener('click', () => {
+    if (isPaused) {
+      base += performance.now() - pausedAt;
+      isPaused = false;
+      pause.textContent = '일시정지';
+      pause.setAttribute('aria-pressed', 'false');
+      status.textContent = '타이머 실행 중';
+    } else {
+      pausedAt = performance.now();
+      isPaused = true;
+      pause.textContent = '재개';
+      pause.setAttribute('aria-pressed', 'true');
+      status.textContent = '타이머 일시정지됨';
+    }
+  });
+  document.querySelector('#timer-reset')?.addEventListener('click', () => {
+    base = performance.now();
+    if (isPaused) pausedAt = base;
+    elapsed.value = '0.000s';
+    counter.value = '00000';
+    status.textContent = '경과 시간을 리셋했습니다';
+  });
+  document.querySelector('#timer-fullscreen')?.addEventListener('click', async () => {
+    try {
+      if (document.fullscreenElement) await document.exitFullscreen();
+      else await app.requestFullscreen();
+      status.textContent = document.fullscreenElement ? '전체화면 모드' : '전체화면 종료';
+    } catch { status.textContent = '이 브라우저에서 전체화면을 시작할 수 없습니다'; }
+  });
+</script>

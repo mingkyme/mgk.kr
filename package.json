@@ -1,0 +1,28 @@
+{
+  "name": "mgk-kr",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "preview": "astro preview",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "check": "astro check",
+    "build": "astro build",
+    "verify:output": "node scripts/verify-output.mjs",
+    "ci": "npm run test && npm run check && npm run build && npm run verify:output",
+    "validate": "npm run ci && npm run test:e2e"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.4",
+    "astro": "^7.3.3",
+    "pdf-lib": "^1.17.1"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@playwright/test": "^1.63.0",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.1"
+  }
+}
