@@ -53,6 +53,7 @@ export function buildSecureCrtXml(rows: SecureCrtRow[], username: string, port: 
   for (const row of rows) {
     assertXmlText(row.folder, '폴더 이름');
     assertXmlText(row.server, '서버 주소');
+    if (!isEndpoint(row.server)) throw new Error('유효한 호스트명 또는 IP 주소를 입력해 주세요.');
     const servers = folders.get(row.folder) ?? [];
     servers.push(row.server);
     folders.set(row.folder, servers);

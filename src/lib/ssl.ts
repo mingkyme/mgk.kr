@@ -50,15 +50,20 @@ function shellQuote(value: string): string {
   return `'${value}'`;
 }
 
+function concreteSniDomain(domain: string): string {
+  return domain.startsWith('*.') ? `wildcard-check.${domain.slice(2)}` : domain;
+}
+
 export function buildSslCommands(endpoints: string[], domains: string[]): { expiry: string; chain: string } {
   const expiry: string[] = [];
   const chain: string[] = [];
   for (const domain of domains) {
+    const sniDomain = concreteSniDomain(domain);
     for (const endpoint of endpoints) {
       if (!isEndpoint(endpoint) || !isSniDomain(domain)) throw new Error('검증되지 않은 입력입니다.');
       const address = isIpv6(endpoint) ? `[${endpoint}]:443` : `${endpoint}:443`;
-      expiry.push(`openssl s_client -connect ${shellQuote(address)} -servername ${shellQuote(domain)} </dev/null 2>/dev/null | openssl x509 -noout -dates | grep 'notAfter'`);
-      chain.push(`openssl s_client -connect ${shellQuote(address)} -servername ${shellQuote(domain)} -showcerts </dev/null 2>/dev/null | grep 'BEGIN CERTIFICATE' | wc -l`);
+      expiry.push(`openssl s_client -connect ${shellQuote(address)} -servername ${shellQuote(sniDomain)} </dev/null 2>/dev/null | openssl x509 -noout -dates | grep 'notAfter'`);
+      chain.push(`openssl s_client -connect ${shellQuote(address)} -servername ${shellQuote(sniDomain)} -showcerts </dev/null 2>/dev/null | grep 'BEGIN CERTIFICATE' | wc -l`);
     }
   }
   return { expiry: expiry.join('\n'), chain: chain.join('\n') };

@@ -15,9 +15,10 @@ describe('SSL command utilities', () => {
     expect(() => parseSslInputs('example.com', 'bad_domain.com')).toThrow(/SNI/);
   });
 
-  it('quotes validated values and brackets IPv6 endpoints', () => {
+  it('quotes validated values, brackets IPv6 endpoints, and concretizes wildcard SNI', () => {
     const result = buildSslCommands(['2001:db8::1', 'edge.example.com'], ['*.example.com']);
-    expect(result.expiry).toContain("-connect '[2001:db8::1]:443' -servername '*.example.com'");
+    expect(result.expiry).toContain("-connect '[2001:db8::1]:443' -servername 'wildcard-check.example.com'");
+    expect(result.expiry).not.toContain("-servername '*.example.com'");
     expect(result.expiry).toContain("-connect 'edge.example.com:443'");
     expect(result.chain).toContain('-showcerts');
     expect(result.expiry).not.toContain('undefined');

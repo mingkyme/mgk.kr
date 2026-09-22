@@ -12,7 +12,7 @@ import ToolLayout from '../../layouts/ToolLayout.astro';
       <div class="field">
         <label for="ssl-domains">SNI 도메인</label>
         <textarea id="ssl-domains" placeholder={'example.com\n*.example.org'}></textarea>
-        <p class="hint">DNS 또는 와일드카드 도메인 · 한 줄에 하나</p>
+        <p class="hint">DNS 또는 와일드카드 도메인 · 한 줄에 하나. 와일드카드는 실제 SNI 전송 시 <code>wildcard-check.example.com</code> 형태의 구체적인 호스트명으로 변환합니다.</p>
       </div>
     </div>
     <button class="button" type="submit">명령어 생성</button>
