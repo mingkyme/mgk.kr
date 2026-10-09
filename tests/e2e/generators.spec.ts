@@ -78,6 +78,7 @@ for (const offscreen of [true, false]) {
   test(`QR mobile PNG completes without idle toBlob callbacks (OffscreenCanvas ${offscreen})`, async ({ page }) => {
     await page.addInitScript(({ offscreen }) => {
       HTMLCanvasElement.prototype.toBlob = () => {}; // Reproduce stalled browser idle encoding, never synthesize a PNG.
+      if (typeof OffscreenCanvas !== 'undefined') OffscreenCanvas.prototype.convertToBlob = () => new Promise(() => {});
       if (!offscreen) Object.defineProperty(window, 'OffscreenCanvas', { configurable: true, value: undefined });
     }, { offscreen });
     await page.setViewportSize({ width: 390, height: 844 });

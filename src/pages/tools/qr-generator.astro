@@ -43,22 +43,17 @@ import ToolLayout from '../../layouts/ToolLayout.astro';
     try {
       const result = await createQr(input.value, { size: Number(size.value), ecc: ecc.value as QrEcc });
       if (current !== revision) return;
-      // HTMLCanvasElement.toBlob uses Chromium idle scheduling and can stall
-      // indefinitely for a detached large canvas. Do not gate the UI on that callback.
-      const offscreen = typeof OffscreenCanvas !== 'undefined' && typeof OffscreenCanvas.prototype.convertToBlob === 'function';
-      const staging = offscreen ? new OffscreenCanvas(result.size, result.size) : document.createElement('canvas');
+      // Both async canvas encoders can stall on Chromium idle scheduling.
+      // A bounded 2048px synchronous encode uses real pixels and no idle callback.
+      const staging = document.createElement('canvas');
       staging.width = staging.height = result.size;
-      const context = offscreen ? (staging as OffscreenCanvas).getContext('2d') : (staging as HTMLCanvasElement).getContext('2d');
+      const context = staging.getContext('2d');
       if (!context) throw new Error('Canvas를 사용할 수 없습니다.');
       context.putImageData(new ImageData(new Uint8ClampedArray(result.pixels), result.size, result.size), 0, 0);
-      let blob: Blob;
-      if (offscreen) blob = await (staging as OffscreenCanvas).convertToBlob({ type: 'image/png' });
-      else {
-        // Bounded 2048px compatibility path; encode real pixels without an idle callback.
-        const encoded = (staging as HTMLCanvasElement).toDataURL('image/png');
-        const bytes = Uint8Array.from(atob(encoded.split(',')[1]), character => character.charCodeAt(0));
-        blob = new Blob([bytes], { type: 'image/png' });
-      }
+      const encoded = staging.toDataURL('image/png');
+      if (!encoded.startsWith('data:image/png;base64,')) throw new Error('PNG를 만들지 못했습니다.');
+      const bytes = Uint8Array.from(atob(encoded.split(',')[1]), character => character.charCodeAt(0));
+      const blob = new Blob([bytes], { type: 'image/png' });
       if (current !== revision) return;
       pngUrl = URL.createObjectURL(blob);
       svgUrl = URL.createObjectURL(new Blob([result.svg], { type: 'image/svg+xml' }));
