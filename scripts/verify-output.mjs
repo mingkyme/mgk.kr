@@ -1,13 +1,11 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
+import { toolSlugs } from '../src/data/tool-catalog.ts';
 
 const root = resolve('dist');
 const expected = [
-  'index.html', 'tools/securecrt-config-maker.html', 'tools/ssl-checker.html',
-  'tools/remove-duplication.html', 'tools/sort.html', 'tools/unixtime.html',
-  'tools/large-pdf-to-divided-images.html', 'tools/tsv-tool.html',
-  'tools/base64.html', 'tools/timer.html', 'privacy.html', '404.html',
-  'CNAME', 'robots.txt', 'sitemap-index.xml',
+  'index.html', ...toolSlugs.map(name => `tools/${name}.html`),
+  'privacy.html', '404.html', 'CNAME', 'robots.txt', 'sitemap-index.xml',
 ];
 const missing = expected.filter((path) => !existsSync(join(root, path)));
 const walk = (directory) => readdirSync(directory).flatMap((name) => {
@@ -31,7 +29,7 @@ for (const html of walk(root).filter((path) => path.endsWith('.html'))) {
 }
 const sitemap = readFileSync(join(root, 'sitemap-0.xml'), 'utf8');
 const urls = new Set([...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]));
-const toolNames = ['securecrt-config-maker', 'ssl-checker', 'remove-duplication', 'sort', 'unixtime', 'large-pdf-to-divided-images', 'tsv-tool', 'base64', 'timer'];
+const toolNames = toolSlugs;
 const requiredUrls = new Set(['https://mgk.kr/', 'https://mgk.kr/privacy.html', ...toolNames.map((name) => `https://mgk.kr/tools/${name}.html`)]);
 const sitemapMissing = [...requiredUrls].filter((url) => !urls.has(url));
 const lastmodCount = (sitemap.match(/<lastmod>/g) ?? []).length;
@@ -75,11 +73,11 @@ for (const file of expected.filter(p => p.endsWith('.html'))) {
     assert(app?.url === canonical && app.name && app.description && app.offers?.price === '0' && app.offers?.priceCurrency === 'KRW' && !app.aggregateRating, `${file}: WebApplication`);
     assert(crumbs?.itemListElement?.length === 2 && crumbs.itemListElement[1].item === canonical && source.includes('aria-label="현재 위치"'), `${file}: breadcrumb`);
     assert(!source.includes('FAQPage'), `${file}: no FAQ rich-result claims`);
-  } else if (file === 'index.html') assert(schema[0]?.['@graph']?.[0]?.['@type'] === 'WebSite' && schema[0]?.['@graph']?.[1]?.numberOfItems === 9, 'home schema');
+  } else if (file === 'index.html') assert(schema[0]?.['@graph']?.[0]?.['@type'] === 'WebSite' && schema[0]?.['@graph']?.[1]?.numberOfItems === toolSlugs.length, 'home schema');
 }
 assert(!/^Disallow:\s*\//m.test(readFileSync(join(root, 'robots.txt'), 'utf8')), 'robots must allow crawling');
 const pdfPage = readFileSync(join(root, 'tools/large-pdf-to-divided-images.html'), 'utf8');
 assert(pdfPage.includes('id="pdf-demo"') && pdfPage.includes('/demos/demo-poster.pdf') && pdfPage.includes('id="pdf-visual-guide"'), 'PDF demo markup');
 assert(readFileSync(join(root, 'demos/demo-poster.pdf')).subarray(0, 5).toString() === '%PDF-', 'real demo PDF');
-console.log(`seo_routes=12 seo_errors=${seoErrors.length}`);
+console.log(`seo_routes=${expected.filter(p => p.endsWith('.html')).length} seo_errors=${seoErrors.length}`);
 if (seoErrors.length) { console.error(seoErrors); process.exit(1); }

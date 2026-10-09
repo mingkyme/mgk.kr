@@ -1,0 +1,86 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+<ToolLayout title="Cron 설명기" description="Unix 5필드 Cron을 한국어로 설명하고 선택한 시간대의 다음 실행 시각 5개를 계산합니다." eyebrow="Cron · IANA Timezone">
+  <form id="cron-form" class="form-grid">
+    <div class="field">
+      <label for="cron-input">Cron 표현식 (분 시 일 월 요일)</label>
+      <input id="cron-input" type="text" value="0 9 * * 1-5" autocomplete="off" spellcheck="false" aria-describedby="cron-syntax" />
+      <p id="cron-syntax" class="status">표준 Unix 5필드: *, 목록(,), 범위(-), 간격(/). 월 JAN–DEC, 요일 SUN–SAT, 일요일 0/7을 지원합니다.</p>
+    </div>
+    <div class="field">
+      <label for="cron-timezone">일정 시간대</label>
+      <select id="cron-timezone">
+        <option value="Asia/Seoul" selected>Asia/Seoul (서울)</option>
+        <option value="UTC">UTC</option>
+        <option value="America/New_York">America/New_York (뉴욕)</option>
+        <option value="Europe/London">Europe/London (런던)</option>
+        <option value="Asia/Tokyo">Asia/Tokyo (도쿄)</option>
+        <option value="Australia/Sydney">Australia/Sydney (시드니)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="cron-reference">기준 시각 (선택, 비우면 계산 시점의 현재 시각)</label>
+      <input id="cron-reference" type="text" autocomplete="off" spellcheck="false" placeholder="2024-01-01T00:00:00Z" aria-describedby="cron-reference-help" />
+      <p id="cron-reference-help" class="status">ISO 8601 날짜·시간과 Z 또는 오프셋을 입력하세요. 예: 2024-01-01T09:00:00+09:00. 기준 시각 자체는 제외하고 그 이후를 계산합니다.</p>
+    </div>
+    <div class="actions"><button id="cron-explain" class="button" type="submit">설명과 다음 실행 시각 보기</button></div>
+    <p id="cron-error" class="error" role="alert"></p>
+    <section aria-live="polite" aria-atomic="true">
+      <h2>한국어 설명</h2>
+      <p id="cron-description"></p>
+      <p id="cron-used-reference" class="status"></p>
+      <h2>다음 실행 시각 5개</h2>
+      <ol id="cron-next"></ol>
+    </section>
+    <details>
+      <summary>지원 문법과 날짜·시간 계산 방식</summary>
+      <p>초·연도가 포함된 6/7필드 Quartz, L/W/#/?/H, @daily 등의 별칭은 지원하지 않습니다. 간격은 1 이상의 정수이며 해당 필드 전체 범위 크기를 넘을 수 없습니다. 역방향 범위는 지원하지 않습니다.</p>
+      <p>일과 요일이 모두 제한되면 전통적인 Unix OR 규칙으로 둘 중 하나가 맞는 날 실행합니다. 월 조건은 항상 적용됩니다. 두 조건을 모두 만족해야 하는 AND 규칙이 아닙니다.</p>
+      <p>선택한 IANA 시간대의 벽시계 시각을 cron-parser로 계산하며, 실제 UTC ISO 시각과 현지 시각·시간대·UTC 오프셋을 함께 표시합니다. 현재 시각은 브라우저 시계를 사용하며 기준 날짜를 임의의 자정으로 해석하지 않습니다.</p>
+      <p>DST는 cron-parser의 정책을 따릅니다. 뉴욕의 봄 전환에서 존재하지 않는 02:30은 03:30으로 이동하고, 가을에 반복되는 01:30은 첫 번째 시각 한 번만 반환합니다. 실제 운영 Cron 구현의 정책과 다를 수 있습니다.</p>
+      <p>기준 시각 이후 40년 범위에서 최대 5개를 찾습니다. 불가능한 날짜와 탐색 실패는 오류로 표시합니다. 입력과 결과는 브라우저 안에서 처리되며 서버로 전송하지 않습니다.</p>
+    </details>
+  </form>
+</ToolLayout>
+<style>
+  #cron-form { min-width: 0; }
+  #cron-form input, #cron-form select { width: 100%; min-width: 0; box-sizing: border-box; }
+  #cron-form p, #cron-next li, #cron-next code, #cron-next time { overflow-wrap: anywhere; }
+  #cron-next { padding-left: 1.5rem; }
+  #cron-next li { margin-bottom: 1rem; }
+  #cron-next time, #cron-next code { display: block; }
+  details p { margin-top: 0.75rem; }
+</style>
+<script>
+  import { explainCron } from '../../lib/cron';
+  const input = document.querySelector<HTMLInputElement>('#cron-input')!;
+  const timezone = document.querySelector<HTMLSelectElement>('#cron-timezone')!;
+  const reference = document.querySelector<HTMLInputElement>('#cron-reference')!;
+  const description = document.querySelector<HTMLElement>('#cron-description')!;
+  const next = document.querySelector<HTMLOListElement>('#cron-next')!;
+  const error = document.querySelector<HTMLElement>('#cron-error')!;
+  const usedReference = document.querySelector<HTMLElement>('#cron-used-reference')!;
+  document.querySelector<HTMLFormElement>('#cron-form')!.addEventListener('submit', event => {
+    event.preventDefault();
+    error.textContent = '';
+    description.textContent = '';
+    usedReference.textContent = '';
+    next.replaceChildren();
+    try {
+      const result = explainCron(input.value, timezone.value, reference.value);
+      description.textContent = result.description;
+      usedReference.textContent = `계산 기준 (UTC): ${result.reference}`;
+      for (const instant of result.next) {
+        const item = document.createElement('li');
+        const local = document.createElement('time');
+        local.dateTime = instant.iso;
+        local.textContent = instant.local;
+        const iso = document.createElement('code');
+        iso.textContent = instant.iso;
+        item.append(local, iso);
+        next.append(item);
+      }
+    } catch (cause) { error.textContent = cause instanceof Error ? cause.message : '일정을 계산할 수 없습니다.'; }
+  });
+</script>

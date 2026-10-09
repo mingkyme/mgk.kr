@@ -51,8 +51,8 @@ npx playwright install chromium
 ## SEO 및 데모 검증
 
 `npm run validate`는 순수 로직, 정적 SEO 산출물 손상 감지 테스트, Astro 검사,
-빌드·출력 검사와 Playwright를 모두 실행합니다. SEO 검사는 12개 HTML 경로의
-canonical·고유 메타데이터·PNG 크기·404 전용 noindex를 확인하고 9개 도구의
+빌드·출력 검사와 Playwright를 모두 실행합니다. SEO 검사는 17개 HTML 경로의
+canonical·고유 메타데이터·PNG 크기·404 전용 noindex를 확인하고 14개 도구의
 WebApplication/BreadcrumbList·정적 사용 안내를 검사합니다. 내부 링크와
 sitemap에는 기존 `.html` 주소가 유지되며 임의 lastmod는 생성하지 않습니다.
 
@@ -66,7 +66,7 @@ PDF 초기 번들의 지연 로딩, 실제 데모·결과 PDF 다운로드, 네�
 Node 24 LTS 이상의 내장 타입 제거 기능을 사용합니다.
 
 ```bash
-node scripts/generate-og.mjs       # Chromium·시스템 한글 글꼴로 public/og/*.png 12개
+node scripts/generate-og.mjs       # Chromium·시스템 한글 글꼴로 public/og/*.png 17개
 node scripts/generate-pdf-demo.mjs # public/demos/demo-poster.pdf 및 전후 크기 관계 SVG
 ```
 
@@ -87,3 +87,15 @@ PDF 데모는 고정 치수·색·문구·메타데이터 날짜로 생성됩니
 - Lighthouse/구조화 데이터 검증 결과는 기술 점검이지 검색 순위나 리치 결과 노출 보장이 아닙니다.
 
 인증 토큰·가짜 리뷰·FAQPage 리치 결과 주장은 추가하지 않습니다.
+
+## 로컬 생성·검사 도구
+
+- `/tools/regex-tester.html`: JavaScript 정규식 매치, 번호·이름 캡처, 치환 및 리터럴 하이라이트. 모든 매칭은 별도 Worker에서 수행하며 시작 시간을 포함한 약 1초 제한 후 종료합니다. 입력 100,000 UTF-16 코드 단위, 패턴 2,000, 매치 500개, 치환 출력 200,000 제한을 적용합니다. 일부 결과가 잘린 경우 완전한 결과로 사용하면 안 됩니다.
+- `/tools/cron-explainer.html`: 표준 Unix 5필드 설명과 IANA 시간대별 다음 실행 5개. 일·요일은 OR 조건이며 기준 시각은 포함하지 않습니다. Quartz 6/7필드·특수 문법은 거부합니다. 40년 탐색 범위와 라이브러리 반복 제한을 사용하며 DST 처리 결과는 서버 스케줄러와 다를 수 있습니다.
+- `/tools/qr-generator.html`: UTF-8 텍스트를 외부 요청 없이 QR로 생성하고 PNG·SVG를 다운로드합니다. 크기 128–2048, ECC L/M/Q/H를 지원하며 바이트 용량·모듈당 픽셀 수를 검증합니다. QR은 암호화가 아니며 입력 URL에 접속하지 않습니다.
+- `/tools/uuid-generator.html`: CSPRNG를 사용하는 UUID v4·v7을 1–100개 생성합니다. v7은 생성 시각을 포함하며 UUID는 인증 토큰이나 비밀번호의 대체품이 아닙니다.
+- `/tools/password-generator.html`: Web Crypto의 편향 없는 난수 샘플링으로 길이 8–128, 개수 1–100의 비밀번호를 생성합니다. 기본 길이 20, 문자 종류 포함·유사 문자 제외·결과 표시/지우기를 지원합니다. 자동 저장·전송·URL 기록은 하지 않으며 **기존 분석 동의가 있어도 이 페이지에서는 GA를 로드하지 않고 외부 스크립트/분석 연결을 CSP로 차단합니다.** 복사·다운로드는 사용자가 명시적으로 선택하며 평문 파일과 클립보드는 직접 관리해야 합니다. JavaScript 문자열의 완전한 메모리 소거는 보장할 수 없습니다.
+
+`src/data/tool-catalog.ts`는 홈 목록·구조화 데이터·산출물 검사·브라우저 SEO 검사에서 공유하는 도구 레지스트리입니다. 도구를 추가할 때 가이드와 레지스트리를 함께 등록하고 OG 자산을 생성하세요.
+
+새 브라우저 검증에는 실제 QR PNG 디코딩, SVG XML 검사, UUID 형식·버전·파일 결과, 정규식 백트래킹 중단·복구, Cron의 OR·DST·시간대, 패스워드의 무저장·무전송·분석 차단이 포함됩니다. 패스워드 테스트는 합성 난수 스트림만 사용하며 실사용 비밀번호를 생성하거나 출력하지 않습니다. 해당 테스트의 trace·screenshot·video도 비활성화합니다.

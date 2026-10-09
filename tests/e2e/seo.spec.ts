@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
-const tools = ['base64', 'large-pdf-to-divided-images', 'remove-duplication', 'securecrt-config-maker', 'sort', 'ssl-checker', 'timer', 'tsv-tool', 'unixtime'];
+import { toolSlugs } from '../../src/data/tool-catalog';
+const tools = toolSlugs;
 test('Korean homepage describes the available developer utilities', async ({ page }) => {
   await page.goto('/');
   await expect(page).toHaveTitle(/무료 개발자 도구/);

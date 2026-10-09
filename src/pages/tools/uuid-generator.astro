@@ -1,0 +1,55 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+<ToolLayout title="UUID 생성기" description="브라우저의 안전한 난수로 UUID v4 또는 v7을 생성합니다." eyebrow="UUID · v4 / v7">
+  <div class="form-grid">
+    <div class="two-column">
+      <div class="field"><label for="uuid-version">UUID 버전</label><select id="uuid-version"><option value="4" selected>v4 · 무작위</option><option value="7">v7 · 시간 기반</option></select></div>
+      <div class="field"><label for="uuid-count">개수 (1~100)</label><input id="uuid-count" type="number" value="1" min="1" max="100" step="1" /></div>
+    </div>
+    <div class="actions"><button id="uuid-generate" class="button" type="button">UUID 생성</button><button id="uuid-clear" class="button secondary" type="button">지우기</button></div>
+    <p id="uuid-error" class="error" role="alert"></p>
+    <div class="field"><label for="uuid-output">결과 (한 줄에 하나)</label><textarea id="uuid-output" readonly spellcheck="false"></textarea></div>
+    <div class="actions"><button id="uuid-copy" class="button secondary" type="button" disabled>결과 복사</button><button id="uuid-download" class="button secondary" type="button" disabled>TXT 다운로드</button></div>
+    <p id="uuid-status" role="status"></p>
+    <p>버튼을 눌러야 생성됩니다. UUID는 식별자이며 인증 토큰을 대신하지 않습니다. v7에는 생성 시간이 포함됩니다.</p>
+  </div>
+</ToolLayout>
+<script>
+  import { generateUuids } from '../../lib/uuid';
+  const output = document.querySelector<HTMLTextAreaElement>('#uuid-output')!;
+  const version = document.querySelector<HTMLSelectElement>('#uuid-version')!;
+  const count = document.querySelector<HTMLInputElement>('#uuid-count')!;
+  const error = document.querySelector<HTMLElement>('#uuid-error')!;
+  const status = document.querySelector<HTMLElement>('#uuid-status')!;
+  const copy = document.querySelector<HTMLButtonElement>('#uuid-copy')!;
+  const download = document.querySelector<HTMLButtonElement>('#uuid-download')!;
+  let url = '';
+  const clear = () => {
+    output.value = ''; error.textContent = status.textContent = '';
+    copy.disabled = download.disabled = true;
+    if (url) URL.revokeObjectURL(url); url = '';
+  };
+  document.querySelector('#uuid-generate')!.addEventListener('click', () => {
+    clear();
+    try {
+      output.value = generateUuids({ version: Number(version.value) as 4 | 7, count: Number(count.value) }).join('\n');
+      copy.disabled = download.disabled = false;
+    } catch (cause) { error.textContent = cause instanceof Error ? cause.message : 'UUID 생성에 실패했습니다.'; }
+  });
+  copy.addEventListener('click', async () => {
+    if (!output.value) return;
+    try { await navigator.clipboard.writeText(output.value); status.textContent = '복사했습니다.'; }
+    catch { error.textContent = '복사하지 못했습니다. 직접 선택하여 복사하세요.'; }
+  });
+  download.addEventListener('click', () => {
+    if (!output.value) return;
+    if (url) URL.revokeObjectURL(url);
+    url = URL.createObjectURL(new Blob([output.value], { type: 'text/plain;charset=utf-8' }));
+    const link = document.createElement('a'); link.href = url; link.download = 'uuids.txt'; link.click();
+  });
+  count.addEventListener('input', clear); version.addEventListener('change', clear);
+  document.querySelector('#uuid-clear')!.addEventListener('click', clear);
+  window.addEventListener('pagehide', clear);
+  document.addEventListener('astro:before-swap', clear);
+</script>

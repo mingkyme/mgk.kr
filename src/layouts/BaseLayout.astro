@@ -14,6 +14,10 @@ const canonicalPath = Astro.url.pathname === '/index.html' ? '/' : Astro.url.pat
 const canonical = new URL(canonicalPath, Astro.site);
 const year = new Date().getFullYear();
 const fullTitle = title === 'mgk.kr' ? title : `${title} · mgk.kr`;
+const privateTool = ['/tools/password-generator', '/tools/password-generator.html'].includes(Astro.url.pathname);
+const csp = privateTool
+  ? "default-src 'self'; script-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; worker-src 'self' blob:"
+  : "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; worker-src 'self' blob:";
 ---
 <!doctype html>
 <html lang="ko">
@@ -23,7 +27,7 @@ const fullTitle = title === 'mgk.kr' ? title : `${title} · mgk.kr`;
     <meta name="description" content={description} />
     <meta name="theme-color" content="#ffffff" />
     <meta name="color-scheme" content="light dark" />
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; connect-src 'self' https://www.google-analytics.com https://region1.google-analytics.com; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; worker-src 'self' blob:" />
+    <meta http-equiv="Content-Security-Policy" content={csp} />
     <link rel="canonical" href={canonical} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <meta property="og:type" content="website" />
@@ -46,7 +50,7 @@ const fullTitle = title === 'mgk.kr' ? title : `${title} · mgk.kr`;
     <title>{fullTitle}</title>
     <slot name="head" />
   </head>
-  <body>
+  <body data-private-tool={privateTool ? 'true' : undefined}>
     <a class="skip-link" href="#main-content">본문으로 건너뛰기</a>
     <header class="site-header">
       <nav class="nav" aria-label="주요 탐색">
@@ -104,6 +108,10 @@ const fullTitle = title === 'mgk.kr' ? title : `${title} · mgk.kr`;
         gtag('consent', 'update', { analytics_storage: 'denied' });
       };
       const loadAnalytics = () => {
+        if (document.body.dataset.privateTool === 'true') {
+          denyAnalytics();
+          return;
+        }
         setAnalyticsDisabled(false);
         gtag('consent', 'update', { analytics_storage: 'granted' });
         if (document.querySelector(`script[data-ga-id="${GA_ID}"]`)) return;

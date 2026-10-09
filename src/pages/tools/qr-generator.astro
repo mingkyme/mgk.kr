@@ -1,0 +1,78 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+<ToolLayout title="QR 코드 생성기" description="텍스트와 URL을 로컬 QR 이미지로 변환합니다." eyebrow="QR · UTF-8">
+  <div class="form-grid">
+    <div class="field"><label for="qr-input">텍스트 또는 URL</label><textarea id="qr-input" placeholder="안녕하세요 또는 https://example.com" spellcheck="false"></textarea></div>
+    <div class="two-column">
+      <div class="field"><label for="qr-size">이미지 크기 (128~2048 픽셀)</label><input id="qr-size" type="number" min="128" max="2048" step="1" value="384" /></div>
+      <div class="field"><label for="qr-ecc">오류 정정 수준</label><select id="qr-ecc"><option value="L">L</option><option value="M" selected>M (기본)</option><option value="Q">Q</option><option value="H">H</option></select></div>
+    </div>
+    <div class="actions"><button class="button" id="qr-generate" type="button">QR 생성</button><button class="button secondary" id="qr-clear" type="button">지우기</button></div>
+    <p class="error" id="qr-error" role="alert"></p><p id="qr-status" role="status"></p>
+    <canvas id="qr-canvas" hidden aria-label="생성된 QR 코드 미리보기"></canvas>
+    <div class="actions"><button class="button secondary" id="qr-png-download" type="button" disabled>PNG 다운로드</button><button class="button secondary" id="qr-svg-download" type="button" disabled>SVG 다운로드</button></div>
+    <p>입력한 URL에 접속하거나 유효성을 원격 확인하지 않습니다. 긴 입력은 더 큰 이미지가 필요할 수 있습니다.</p>
+  </div>
+</ToolLayout>
+<style>canvas { max-width: 100%; height: auto; image-rendering: pixelated; } canvas[hidden] { display: none; }</style>
+<script>
+  import { createQr, type QrEcc } from '../../lib/qr';
+  const input = document.querySelector<HTMLTextAreaElement>('#qr-input')!;
+  const size = document.querySelector<HTMLInputElement>('#qr-size')!;
+  const ecc = document.querySelector<HTMLSelectElement>('#qr-ecc')!;
+  const canvas = document.querySelector<HTMLCanvasElement>('#qr-canvas')!;
+  const error = document.querySelector<HTMLElement>('#qr-error')!;
+  const status = document.querySelector<HTMLElement>('#qr-status')!;
+  const png = document.querySelector<HTMLButtonElement>('#qr-png-download')!;
+  const svg = document.querySelector<HTMLButtonElement>('#qr-svg-download')!;
+  let pngUrl = ''; let svgUrl = ''; let revision = 0;
+  const clear = () => {
+    revision++;
+    if (pngUrl) URL.revokeObjectURL(pngUrl);
+    if (svgUrl) URL.revokeObjectURL(svgUrl);
+    pngUrl = svgUrl = '';
+    png.disabled = svg.disabled = true;
+    canvas.hidden = true;
+    canvas.width = canvas.height = 0;
+    error.textContent = status.textContent = '';
+  };
+  document.querySelector('#qr-generate')!.addEventListener('click', async () => {
+    clear();
+    const current = revision;
+    try {
+      const result = await createQr(input.value, { size: Number(size.value), ecc: ecc.value as QrEcc });
+      if (current !== revision) return;
+      const staging = document.createElement('canvas');
+      staging.width = staging.height = result.size;
+      const context = staging.getContext('2d');
+      if (!context) throw new Error('Canvas를 사용할 수 없습니다.');
+      context.putImageData(new ImageData(new Uint8ClampedArray(result.pixels), result.size, result.size), 0, 0);
+      const blob = await new Promise<Blob>((resolve, reject) => staging.toBlob(value => value ? resolve(value) : reject(new Error('PNG를 만들지 못했습니다.')), 'image/png'));
+      if (current !== revision) return;
+      pngUrl = URL.createObjectURL(blob);
+      svgUrl = URL.createObjectURL(new Blob([result.svg], { type: 'image/svg+xml' }));
+      canvas.width = canvas.height = result.size;
+      const preview = canvas.getContext('2d');
+      if (!preview) throw new Error('Canvas를 사용할 수 없습니다.');
+      preview.drawImage(staging, 0, 0);
+      canvas.hidden = false;
+      png.disabled = svg.disabled = false;
+      status.textContent = `${result.bytes} UTF-8 바이트 · ${result.size} × ${result.size} 픽셀 · ${ecc.value}`;
+    } catch (cause) {
+      if (current !== revision) return;
+      clear();
+      error.textContent = cause instanceof Error ? cause.message : 'QR 생성에 실패했습니다.';
+    }
+  });
+  const download = (url: string, filename: string) => {
+    if (!url) return;
+    const link = document.createElement('a'); link.href = url; link.download = filename; link.click();
+  };
+  png.addEventListener('click', () => download(pngUrl, 'qr.png'));
+  svg.addEventListener('click', () => download(svgUrl, 'qr.svg'));
+  input.addEventListener('input', clear); size.addEventListener('input', clear); ecc.addEventListener('change', clear);
+  document.querySelector('#qr-clear')!.addEventListener('click', () => { clear(); input.value = ''; });
+  window.addEventListener('pagehide', clear);
+  document.addEventListener('astro:before-swap', clear);
+</script>

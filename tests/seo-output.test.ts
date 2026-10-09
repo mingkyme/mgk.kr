@@ -8,6 +8,11 @@ beforeAll(() => {
   if (result.status !== 0) throw new Error(result.stdout + result.stderr);
 }, 120_000);
 describe('built SEO verifier detects damaged output', () => {
+  it('accepts healthy output for the expanded tool catalog', () => {
+    const result = spawnSync(process.execPath, [resolve('scripts/verify-output.mjs')], { encoding: 'utf8' });
+    expect(result.status, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout).toContain('seo_routes=17 seo_errors=0');
+  });
   for (const [name, file, damage] of [
     ['missing application schema', 'tools/base64.html', (s: string) => s.replaceAll('WebApplication', 'Thing')],
     ['indexable 404', '404.html', (s: string) => s.replace('content="noindex"', 'content="index"')],
