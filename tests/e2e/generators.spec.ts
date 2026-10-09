@@ -74,6 +74,33 @@ test('QR downloads decode the same Korean payload, SVG is valid XML, and failure
   await expect(page.locator('#qr-canvas')).toBeVisible();
 });
 
+for (const offscreen of [true, false]) {
+  test(`QR mobile PNG completes without idle toBlob callbacks (OffscreenCanvas ${offscreen})`, async ({ page }) => {
+    await page.addInitScript(({ offscreen }) => {
+      HTMLCanvasElement.prototype.toBlob = () => {}; // Reproduce stalled browser idle encoding, never synthesize a PNG.
+      if (!offscreen) Object.defineProperty(window, 'OffscreenCanvas', { configurable: true, value: undefined });
+    }, { offscreen });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/tools/qr-generator.html');
+    await page.locator('#qr-input').fill('모바일'); await page.locator('#qr-size').fill('2048');
+    await page.locator('#qr-generate').click(); await expect(page.locator('#qr-canvas')).toBeVisible();
+    const pending = page.waitForEvent('download'); await page.locator('#qr-png-download').click();
+    const bytes = await downloadedBytes(await pending);
+    const raster = await page.evaluate(async bytes => {
+      const url = URL.createObjectURL(new Blob([new Uint8Array(bytes)], { type: 'image/png' }));
+      try {
+        const image = new Image(); image.src = url; await image.decode();
+        const c = document.createElement('canvas'); c.width = c.height = 256;
+        const context = c.getContext('2d')!; context.imageSmoothingEnabled = false; context.drawImage(image, 0, 0, 256, 256);
+        return { data: [...context.getImageData(0, 0, 256, 256).data], sourceWidth: image.width, sourceHeight: image.height };
+      } finally { URL.revokeObjectURL(url); }
+    }, [...bytes]);
+    expect(raster.sourceWidth).toBe(2048); expect(raster.sourceHeight).toBe(2048);
+    expect(jsQR(new Uint8ClampedArray(raster.data), 256, 256)?.data).toBe('모바일');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+  });
+}
+
 test('UUID manually generates both versions, copies and downloads valid batches', async ({ page }) => {
   await page.addInitScript(() => {
     let copied = '';
