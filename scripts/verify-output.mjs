@@ -42,3 +42,44 @@ if (missing.length || broken.length || sitemapMissing.length || lastmodCount) {
   console.error({ missing, broken, sitemapMissing, lastmodCount });
   process.exit(1);
 }
+
+const seoErrors = [];
+const assert = (condition, message) => { if (!condition) seoErrors.push(message); };
+const titles = new Set();
+const descriptions = new Set();
+for (const file of expected.filter(p => p.endsWith('.html'))) {
+  const source = readFileSync(join(root, file), 'utf8');
+  const meta = (name) => {
+    const tag = [...source.matchAll(/<meta\s+[^>]*>/g)].map(m => m[0]).find(t => t.includes(`name="${name}"`) || t.includes(`property="${name}"`));
+    return tag?.match(/content="([^"]*)"/)?.[1];
+  };
+  const title = source.match(/<title>([^<]+)<\/title>/)?.[1];
+  const description = meta('description');
+  assert(title && !titles.has(title), `${file}: missing/duplicate title`); titles.add(title);
+  assert(description && !descriptions.has(description), `${file}: missing/duplicate description`); descriptions.add(description);
+  assert(file === '404.html' ? meta('robots') === 'noindex' : !meta('robots')?.includes('noindex'), `${file}: robots`);
+  const canonical = `https://mgk.kr/${file === 'index.html' ? '' : file}`;
+  assert(source.includes(`rel="canonical" href="${canonical}"`), `${file}: canonical`);
+  assert(meta('twitter:card') === 'summary_large_image' && meta('og:image:width') === '1200' && meta('og:image:height') === '630' && meta('og:image:alt'), `${file}: social metadata`);
+  try {
+    const image = new URL(meta('og:image'));
+    assert(image.origin === 'https://mgk.kr' && image.pathname.endsWith('.png'), `${file}: local PNG`);
+    const bytes = readFileSync(join(root, image.pathname));
+    assert(bytes.subarray(0, 8).equals(Buffer.from([137,80,78,71,13,10,26,10])) && bytes.readUInt32BE(16) === 1200 && bytes.readUInt32BE(20) === 630, `${file}: PNG dimensions`);
+  } catch { seoErrors.push(`${file}: missing OG asset`); }
+  const schema = [...source.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>(.*?)<\/script>/gs)].map(m => JSON.parse(m[1]));
+  if (file.startsWith('tools/')) {
+    for (const id of ['usage', 'examples', 'limitations', 'faq', 'related-tools']) assert(source.includes(`id="${id}"`), `${file}: ${id}`);
+    const app = schema[0]?.['@graph']?.find(n => n['@type'] === 'WebApplication');
+    const crumbs = schema[0]?.['@graph']?.find(n => n['@type'] === 'BreadcrumbList');
+    assert(app?.url === canonical && app.name && app.description && app.offers?.price === '0' && app.offers?.priceCurrency === 'KRW' && !app.aggregateRating, `${file}: WebApplication`);
+    assert(crumbs?.itemListElement?.length === 2 && crumbs.itemListElement[1].item === canonical && source.includes('aria-label="현재 위치"'), `${file}: breadcrumb`);
+    assert(!source.includes('FAQPage'), `${file}: no FAQ rich-result claims`);
+  } else if (file === 'index.html') assert(schema[0]?.['@graph']?.[0]?.['@type'] === 'WebSite' && schema[0]?.['@graph']?.[1]?.numberOfItems === 9, 'home schema');
+}
+assert(!/^Disallow:\s*\//m.test(readFileSync(join(root, 'robots.txt'), 'utf8')), 'robots must allow crawling');
+const pdfPage = readFileSync(join(root, 'tools/large-pdf-to-divided-images.html'), 'utf8');
+assert(pdfPage.includes('id="pdf-demo"') && pdfPage.includes('/demos/demo-poster.pdf') && pdfPage.includes('id="pdf-visual-guide"'), 'PDF demo markup');
+assert(readFileSync(join(root, 'demos/demo-poster.pdf')).subarray(0, 5).toString() === '%PDF-', 'real demo PDF');
+console.log(`seo_routes=12 seo_errors=${seoErrors.length}`);
+if (seoErrors.length) { console.error(seoErrors); process.exit(1); }

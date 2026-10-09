@@ -11,6 +11,8 @@ import ToolLayout from '../../layouts/ToolLayout.astro';
     </div>
     <div class="actions">
       <button class="button" id="pdf-process" type="button">로컬에서 A4 분할</button>
+      <button class="button secondary" id="pdf-demo" type="button">데모 PDF로 분할 체험</button>
+      <a class="button secondary" id="pdf-demo-download" href="/demos/demo-poster.pdf" download="demo-poster.pdf">샘플 PDF 다운로드</a>
       <a class="button secondary" id="pdf-download" download="a4-tiled.pdf" hidden>결과 PDF 다운로드</a>
     </div>
     <div class="field">
@@ -21,29 +23,49 @@ import ToolLayout from '../../layouts/ToolLayout.astro';
     <p id="pdf-error" class="error" role="alert"></p>
     <div class="notice">A4 또는 크기가 비슷한 페이지는 한 장에 맞춰 유지합니다. 가로 페이지는 A4 가로 방향을 사용하고, 실제로 큰 페이지는 축소하지 않고 100% 크기로 타일 분할합니다.</div>
   </div>
+  <section id="pdf-visual-guide" aria-labelledby="pdf-guide-heading">
+    <h2 id="pdf-guide-heading">데모 분할 전후 안내</h2>
+    <p>아래는 샘플 PDF와 동일한 색·문구·영역으로 만든 크기 관계도입니다. 실제 화면 캡처가 아닙니다. A4 두 배 너비와 높이의 한 페이지가 축소 없이 네 장으로 나뉩니다.</p>
+    <div class="two-column form-grid">
+      <figure><img src="/demos/pdf-before.svg" width="280" height="380" alt="분할 전: 파랑 TILE 1, 초록 TILE 2, 노랑 TILE 3, 빨강 TILE 4 영역이 한 포스터 안에 배치됨" /><figcaption>원본 1페이지: 1190.56 × 1683.78 pt</figcaption></figure>
+      <figure><img src="/demos/pdf-after.svg" width="300" height="380" alt="분할 후: TILE 1부터 TILE 4까지 별도의 A4 세로 페이지 네 장, 좌상·우상·좌하·우하 순서" /><figcaption>출력 4페이지: 각 595.28 × 841.89 pt</figcaption></figure>
+    </div>
+  </section>
 </ToolLayout>
 <script>
-  import { tilePdfToA4 } from '../../lib/pdf';
+
   const fileInput = document.querySelector<HTMLInputElement>('#pdf-file')!;
   const processButton = document.querySelector<HTMLButtonElement>('#pdf-process')!;
   const download = document.querySelector<HTMLAnchorElement>('#pdf-download')!;
   const progress = document.querySelector<HTMLProgressElement>('#pdf-progress')!;
   const status = document.querySelector<HTMLElement>('#pdf-status')!;
   const error = document.querySelector<HTMLElement>('#pdf-error')!;
+  const demoButton = document.querySelector<HTMLButtonElement>('#pdf-demo')!;
+  let busy = false;
   let resultUrl: string | null = null;
   const clearUrl = () => { if (resultUrl) { URL.revokeObjectURL(resultUrl); resultUrl = null; } };
-  processButton.addEventListener('click', async () => {
+  const run = async (demo = false) => {
+    if (busy) return;
     const file = fileInput.files?.[0];
     error.textContent = '';
     download.hidden = true;
+    download.removeAttribute('href');
     clearUrl();
-    if (!file) { error.textContent = 'PDF 파일을 선택해 주세요.'; return; }
-    if (file.type && file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) { error.textContent = 'PDF 파일만 처리할 수 있습니다.'; return; }
-    processButton.disabled = true;
+    if (!demo && !file) { error.textContent = 'PDF 파일을 선택해 주세요.'; return; }
+    if (!demo && file?.type && file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) { error.textContent = 'PDF 파일만 처리할 수 있습니다.'; return; }
+    busy = true;
+    processButton.disabled = demoButton.disabled = true;
     progress.value = 0;
-    status.textContent = file.size > 100 * 1024 * 1024 ? '큰 파일입니다. 브라우저 메모리 상황에 따라 오래 걸릴 수 있습니다.' : 'PDF를 읽고 있습니다…';
+    status.textContent = (file?.size ?? 0) > 100 * 1024 * 1024 ? '큰 파일입니다. 브라우저 메모리 상황에 따라 오래 걸릴 수 있습니다.' : 'PDF를 읽고 있습니다…';
     try {
-      const bytes = await tilePdfToA4(await file.arrayBuffer(), (completed, total) => {
+      const { tilePdfToA4 } = await import('../../lib/pdf');
+      let input: ArrayBuffer;
+      if (demo) {
+        const response = await fetch('/demos/demo-poster.pdf');
+        if (!response.ok) throw new Error(`데모 다운로드 실패 (HTTP ${response.status})`);
+        input = await response.arrayBuffer();
+      } else input = await file!.arrayBuffer();
+      const bytes = await tilePdfToA4(input, (completed, total) => {
         progress.value = Math.round((completed / total) * 100);
         status.textContent = `${completed} / ${total} 페이지 처리 중…`;
       });
@@ -56,7 +78,9 @@ import ToolLayout from '../../layouts/ToolLayout.astro';
       progress.value = 0;
       error.textContent = cause instanceof Error ? `PDF 처리 실패: ${cause.message}` : 'PDF를 처리하지 못했습니다.';
       status.textContent = '';
-    } finally { processButton.disabled = false; }
-  });
+    } finally { busy = false; processButton.disabled = demoButton.disabled = false; }
+  };
+  processButton.addEventListener('click', () => void run());
+  demoButton.addEventListener('click', () => void run(true));
   window.addEventListener('beforeunload', clearUrl, { once: true });
 </script>
