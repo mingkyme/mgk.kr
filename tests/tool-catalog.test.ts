@@ -4,6 +4,16 @@ import { fileURLToPath } from 'node:url';
 import { guides } from '../src/data/tool-guides';
 const added = ['regex-tester', 'cron-explainer', 'qr-generator', 'uuid-generator', 'password-generator'];
 describe('new utility guides', () => {
+  it('describes Unix seconds and explicit browser-local date entry without millisecond features', async () => {
+    const { toolCatalog } = await import('../src/data/tool-catalog');
+    const guide = guides.unixtime;
+    const copy = JSON.stringify(guide);
+    expect(copy).not.toMatch(/밀리초|자동 감지|\.000/);
+    expect(copy).toContain('YYYY-MM-DD HH:mm:ss');
+    expect(copy).toContain('브라우저');
+    expect(copy).toContain('초');
+    expect(toolCatalog.find(tool => tool.key === 'unixtime')!.description).not.toContain('밀리초');
+  });
   it('shares a catalog for homepage, sitemap checks and every guide without omitting new tools', async () => {
     expect(existsSync(fileURLToPath(new URL('../src/data/tool-catalog.ts', import.meta.url)))).toBe(true);
     const { toolCatalog, toolSlugs } = await import('../src/data/tool-catalog');

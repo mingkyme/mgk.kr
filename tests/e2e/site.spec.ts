@@ -102,4 +102,10 @@ test('SSL, dedupe, sort, Base64, and Unix regressions work in built pages', asyn
   await page.locator('#unix-input').fill('invalid');
   await page.getByRole('button', { name: 'Unix → 날짜' }).click();
   await expect(page.locator('#time-error')).toContainText('숫자');
+  await expect(page.locator('#date-input')).toBeEmpty();
+  await expect(page.locator('#unix-unit, #output-unit')).toHaveCount(0);
+  await page.locator('#unix-input').fill('0');
+  await page.locator('#timezone').selectOption('utc');
+  await page.locator('#unix-to-date').click();
+  await expect(page.locator('#date-input')).toHaveValue('1970-01-01 00:00:00');
 });

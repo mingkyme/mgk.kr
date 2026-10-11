@@ -4,7 +4,7 @@ const entries = [
   { key: 'ssl-checker', title: 'SSL 명령어 생성기', description: '인증서 만료일과 체인 확인용 OpenSSL 명령을 안전하게 생성합니다.', tag: 'TLS · OpenSSL' },
   { key: 'remove-duplication', title: '중복 라인 제거', description: '첫 등장 순서를 유지하며 빈 줄과 중복 항목을 정리합니다.', tag: 'TEXT' },
   { key: 'sort', title: '라인 정렬', description: '한글과 숫자를 자연스럽게 인식해 오름차순 또는 내림차순으로 정렬합니다.', tag: 'TEXT · KO' },
-  { key: 'unixtime', title: 'Unix Time 변환', description: '초·밀리초 Unix 시간과 ISO/로컬 날짜를 양방향으로 변환합니다.', tag: 'TIME' },
+  { key: 'unixtime', title: 'Unix Time 변환', description: 'Unix 초와 브라우저 로컬·UTC 날짜를 양방향으로 변환합니다.', tag: 'TIME' },
   { key: 'large-pdf-to-divided-images', title: 'PDF A4 분할', description: '파일을 업로드하지 않고 브라우저에서 큰 PDF 페이지를 A4로 분할합니다.', tag: 'LOCAL · PDF' },
   { key: 'tsv-tool', title: 'TSV 탭 변환기', description: 'cat -T의 ^I 표시를 실제 탭 또는 줄바꿈으로 변환합니다.', tag: 'TEXT · TSV' },
   { key: 'base64', title: 'Base64 인코더', description: 'Unicode 텍스트를 표준·URL-safe Base64로 인코딩하고 디코딩합니다.', tag: 'UTF-8 · JSON' },

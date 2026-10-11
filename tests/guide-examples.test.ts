@@ -16,9 +16,16 @@ it('published text examples are actual runnable outputs', () => {
   expect(sortLines(guides.sort.input, 'asc').text).toBe(guides.sort.output);
   expect(convertCaretTabs(guides['tsv-tool'].input).tabs).toBe(guides['tsv-tool'].output);
 });
-it('published Unix example round trips', () => {
-  expect(formatDate(parseUnixInput('1704067200', 'seconds').milliseconds, 'utc')).toBe(guides.unixtime.output);
-  expect(toUnix(parseDateInput(guides.unixtime.output), 'seconds')).toBe(1704067200);
+it('published Unix example round trips in the documented browser-local zone', () => {
+  const previousZone = process.env.TZ;
+  process.env.TZ = 'Asia/Seoul';
+  try {
+    expect(formatDate(parseUnixInput('1704067200').milliseconds, 'local')).toBe(guides.unixtime.output);
+    expect(toUnix(parseDateInput(guides.unixtime.output, 'local'))).toBe(1704067200);
+  } finally {
+    if (previousZone === undefined) delete process.env.TZ;
+    else process.env.TZ = previousZone;
+  }
 });
 it('published command and XML excerpts are real generator output', () => {
   expect(buildSslCommands(['1.1.1.1'], ['example.com']).expiry).toBe(guides['ssl-checker'].output);
