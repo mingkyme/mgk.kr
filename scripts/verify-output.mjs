@@ -1,6 +1,9 @@
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { toolSlugs } from '../src/data/tool-catalog.ts';
+import { guides } from '../src/data/tool-guides.ts';
+import { homeSeo, toolGroups } from '../src/data/site-seo.ts';
+const escapeHtml = value => value.replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
 
 const root = resolve('dist');
 const expected = [
@@ -67,13 +70,24 @@ for (const file of expected.filter(p => p.endsWith('.html'))) {
   } catch { seoErrors.push(`${file}: missing OG asset`); }
   const schema = [...source.matchAll(/<script[^>]*type="application\/ld\+json"[^>]*>(.*?)<\/script>/gs)].map(m => JSON.parse(m[1]));
   if (file.startsWith('tools/')) {
-    for (const id of ['usage', 'examples', 'limitations', 'faq', 'related-tools']) assert(source.includes(`id="${id}"`), `${file}: ${id}`);
+    for (const id of ['use-cases', 'usage', 'examples', 'limitations', 'faq', 'related-tools']) assert(source.includes(`id="${id}"`), `${file}: ${id}`);
+    const key = file.slice('tools/'.length).replace(/\.html$/, '');
+    const guide = guides[key];
+    assert(title === escapeHtml(`${guide.title} · mgk.kr`) && description === escapeHtml(guide.description), `${file}: metadata matches guide`);
+    assert(source.includes(`<h1>${escapeHtml(guide.title)}</h1>`) && guide.useCases.every(useCase => source.includes(escapeHtml(useCase))), `${file}: visible title/use cases`);
     const app = schema[0]?.['@graph']?.find(n => n['@type'] === 'WebApplication');
     const crumbs = schema[0]?.['@graph']?.find(n => n['@type'] === 'BreadcrumbList');
-    assert(app?.url === canonical && app.name && app.description && app.offers?.price === '0' && app.offers?.priceCurrency === 'KRW' && !app.aggregateRating, `${file}: WebApplication`);
+    assert(app?.url === canonical && app.name === guide.title && app.description === guide.description && app.offers?.price === '0' && app.offers?.priceCurrency === 'KRW' && !app.aggregateRating, `${file}: WebApplication`);
     assert(crumbs?.itemListElement?.length === 2 && crumbs.itemListElement[1].item === canonical && source.includes('aria-label="현재 위치"'), `${file}: breadcrumb`);
     assert(!source.includes('FAQPage'), `${file}: no FAQ rich-result claims`);
-  } else if (file === 'index.html') assert(schema[0]?.['@graph']?.[0]?.['@type'] === 'WebSite' && schema[0]?.['@graph']?.[1]?.numberOfItems === toolSlugs.length, 'home schema');
+  } else if (file === 'index.html') {
+    const website = schema[0]?.['@graph']?.[0];
+    const list = schema[0]?.['@graph']?.[1];
+    const orderedUrls = toolGroups.flatMap(group => group.tools.map(key => `https://mgk.kr/tools/${key}.html`));
+    assert(website?.['@type'] === 'WebSite' && website.name === 'mgk.kr' && website.description === homeSeo.description && list?.numberOfItems === toolSlugs.length, 'home schema');
+    assert(title === escapeHtml(`${homeSeo.title} · mgk.kr`) && description === escapeHtml(homeSeo.description), 'home metadata');
+    assert(JSON.stringify(list?.itemListElement?.map(item => item.item.url)) === JSON.stringify(orderedUrls), 'home ordered tool list');
+  }
 }
 assert(!/^Disallow:\s*\//m.test(readFileSync(join(root, 'robots.txt'), 'utf8')), 'robots must allow crawling');
 const pdfPage = readFileSync(join(root, 'tools/large-pdf-to-divided-images.html'), 'utf8');

@@ -27,9 +27,16 @@ const structuredData = {
       <p class="eyebrow">{eyebrow}</p>
       <h1>{title}</h1>
       <p class="lede">{description}</p>
+      <nav class="actions tool-jump-links" aria-label="도구 안내">
+        <a class="button ghost" href="#use-cases">활용 예시</a>
+        <a class="button ghost" href="#usage">사용법</a>
+        <a class="button ghost" href="#examples">입출력 예시</a>
+        <a class="button ghost" href="#faq">자주 묻는 질문</a>
+      </nav>
     </header>
     <section class="card tool-panel"><slot /></section>
     <div class="tool-guide">
+      <section id="use-cases" aria-labelledby="use-cases-heading"><h2 id="use-cases-heading">이럴 때 사용하세요</h2><ul>{guide.useCases.map(useCase => <li>{useCase}</li>)}</ul></section>
       <section id="usage" aria-labelledby="usage-heading"><h2 id="usage-heading">사용 방법</h2><ol>{guide.steps.map(step => <li>{step}</li>)}</ol></section>
       <section id="examples" aria-labelledby="example-heading"><h2 id="example-heading">입력과 출력 예시</h2><p>{guide.example}</p><h3>입력</h3><pre>{guide.input}</pre><h3>출력</h3><pre>{guide.output}</pre></section>
       <section id="limitations" aria-labelledby="limit-heading"><h2 id="limit-heading">처리 방식과 주의사항</h2><p>{guide.limits}</p></section>

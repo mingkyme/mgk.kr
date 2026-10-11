@@ -88,6 +88,19 @@ PDF 데모는 고정 치수·색·문구·메타데이터 날짜로 생성됩니
 
 인증 토큰·가짜 리뷰·FAQPage 리치 결과 주장은 추가하지 않습니다.
 
+### 검색 스니펫과 클릭률 개선
+
+- `src/data/tool-guides.ts`에서 도구별 검색 제목·설명·활용 예시를 관리합니다. `<title>`, H1, OG/Twitter 메타데이터와 WebApplication 설명이 같은 내용을 가리킵니다.
+- `src/data/site-seo.ts`는 홈 메타데이터와 목적별 도구 분류의 출처입니다. 14개 공개 도구가 한 번씩 나타나며 실제 표시 순서가 ItemList 순서와 일치합니다.
+- `src/data/social-titles.ts`는 공유 이미지에도 동일한 제목을 제공합니다. 변경 후 OG 생성 명령을 실행하세요.
+- 안내·활용 예시·도구 링크는 JavaScript 없이도 HTML에 포함됩니다. 쿠키 안내와 공통 푸터에는 `data-nosnippet`을 지정해 검색 요약 후보에서 제외합니다.
+- 제목은 실제 작업과 결과를 먼저 설명합니다. 파일 업로드, 실시간 서버 점검, 지원하지 않는 단위·기능을 지원한다고 쓰지 않습니다. 반복 키워드·가짜 평점·연도만 바꾸는 갱신은 하지 않습니다.
+
+Search Console 계정 접근이 없으면 실제 노출 검색어·평균 순위·CTR과 색인 상태를 확인한 것으로 기록하지 않습니다. 소유자는 배포 전후의 검색 실적을 같은 기간 길이(예: 28일), 검색 유형, 국가·기기 조건으로 비교하세요. 전체 평균만 보지 말고 노출이 많은 **검색어와 페이지 조합**을 비교하고 순위 변화·검색 의도 차이도 함께 살펴보세요. 제목 교체만으로 클릭률 상승을 확정할 수 없으며 Google이 제목·설명을 그대로 표시하는 것도 보장되지 않습니다.
+
+Google 공식 참고: [제목 링크](https://developers.google.com/search/docs/appearance/title-link), [검색 스니펫](https://developers.google.com/search/docs/appearance/snippet), [사이트 이름](https://developers.google.com/search/docs/appearance/site-names).
+
+
 ## 로컬 생성·검사 도구
 
 - `/tools/unixtime.html`: Unix 정수 초와 날짜를 양방향으로 변환합니다. 브라우저 로컬 시간대가 기본이며 시간대 이름·해당 날짜의 UTC 오프셋을 표시합니다. 시간대 없는 날짜는 선택한 로컬/UTC로 해석하고 ISO의 명시적 오프셋은 그대로 적용합니다. 현재 시간·복사를 지원하며 단위 자동 감지와 소수 초는 지원하지 않습니다.

@@ -67,7 +67,7 @@ const csp = privateTool
       <slot />
     </main>
     <footer class="site-footer">
-      <div class="container footer-inner">
+      <div class="container footer-inner" data-nosnippet>
         <span>© {year} mgk.kr</span>
         <div class="footer-links">
           <a href="/privacy.html">개인정보 처리방침</a>
@@ -76,7 +76,7 @@ const csp = privateTool
         </div>
       </div>
     </footer>
-    <section id="cookie-banner" class="cookie-banner" role="dialog" aria-modal="false" aria-labelledby="cookie-title" hidden>
+    <section id="cookie-banner" class="cookie-banner" data-nosnippet role="dialog" aria-modal="false" aria-labelledby="cookie-title" hidden>
       <h2 id="cookie-title">분석 쿠키 설정</h2>
       <p>사이트 개선을 위해 익명 Google Analytics 데이터를 수집할 수 있습니다. 동의 전에는 Google 태그를 불러오지 않습니다.</p>
       <div class="actions">

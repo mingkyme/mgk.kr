@@ -19,6 +19,9 @@ describe('built SEO verifier detects damaged output', () => {
     ['noindex tool', 'tools/sort.html', (s: string) => s.replace('</head>', '<meta name="robots" content="noindex"></head>')],
     ['wrong OG dimensions', 'tools/tsv-tool.html', (s: string) => s.replace('content="1200"', 'content="800"')],
     ['missing usage', 'tools/timer.html', (s: string) => s.replace('id="usage"', 'id="removed"')],
+    ['missing use cases', 'tools/timer.html', (s: string) => s.replace('id="use-cases"', 'id="removed"')],
+    ['stale tool title', 'tools/base64.html', (s: string) => s.replace(/<title>[^<]+<\/title>/, '<title>Unrelated conversion · mgk.kr</title>')],
+    ['unrelated description', 'tools/sort.html', (s: string) => s.replace(/<meta name="description" content="[^"]*"/, '<meta name="description" content="A different description"')],
     ['missing demo', 'tools/large-pdf-to-divided-images.html', (s: string) => s.replaceAll('/demos/demo-poster.pdf', '/missing-demo.pdf')],
   ] as const) it(name, () => {
     const dir = mkdtempSync(join(tmpdir(), 'mgk-seo-'));

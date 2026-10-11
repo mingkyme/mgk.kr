@@ -6,5 +6,6 @@ test('homepage offers every catalog entry and its actual ItemList matches the vi
   const data = JSON.parse(await page.locator('script[type="application/ld+json"]').textContent() ?? '');
   const list = data['@graph'].find((node: Record<string, unknown>) => node['@type'] === 'ItemList');
   expect(list.numberOfItems).toBe(toolCatalog.length);
-  expect(list.itemListElement.map((item: {item: {url: string}}) => item.item.url)).toEqual(toolCatalog.map(tool => `https://mgk.kr${tool.href}`));
+  const visibleHrefs = await page.locator('a.tool-card[href^="/tools/"]').evaluateAll(nodes => nodes.map(node => node.getAttribute('href')));
+  expect(list.itemListElement.map((item: {item: {url: string}}) => item.item.url)).toEqual(visibleHrefs.map(href => `https://mgk.kr${href}`));
 });

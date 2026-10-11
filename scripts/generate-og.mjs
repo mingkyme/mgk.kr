@@ -1,8 +1,7 @@
 import { chromium } from '@playwright/test';
 import { mkdir } from 'node:fs/promises';
 // Uses the already installed Chromium and system Korean fonts; no network assets.
-const guides = await import('../src/data/tool-guides.ts');
-const titles = { index: '무료 개발자 도구\n텍스트 · 시간 · PDF', privacy: '개인정보 처리방침', '404': '페이지를 찾을 수 없음', ...Object.fromEntries(Object.entries(guides.guides).map(([key, value]) => [key, value.title])) };
+import { socialTitles as titles } from '../src/data/social-titles.ts';
 await mkdir('public/og', { recursive: true });
 const browser = await chromium.launch();
 try {
