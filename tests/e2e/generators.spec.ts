@@ -175,7 +175,7 @@ test.describe('synthetic password browser assertions only', () => {
       const value = (document.querySelector('#password-output') as HTMLTextAreaElement).value;
       return value.length === 20 && /[A-Z]/.test(value) && /[a-z]/.test(value) && /[0-9]/.test(value) && /[^A-Za-z0-9]/.test(value);
     })).toBe(true);
-    await expect(page.locator('#password-output')).toBeHidden();
+    await expect(page.locator('#password-output')).toBeVisible();
     await page.locator('#password-visible').check(); await expect(page.locator('#password-output')).toBeVisible();
     await page.locator('#password-visible').uncheck();
     await page.locator('#password-copy').click();
@@ -207,6 +207,77 @@ test.describe('synthetic password browser assertions only', () => {
     expect(await page.evaluate(() => (document.querySelector('#password-output') as HTMLTextAreaElement).value === '')).toBe(true);
     expect(await page.evaluate(() => (window as unknown as { __passwordChecks: { noLeaks(): boolean } }).__passwordChecks.noLeaks())).toBe(true);
     expect(requests).toBe(0);
+  });
+  test('result visibility defaults on and survives generation, edits, clear and errors', async ({ page }) => {
+    await page.goto('/tools/password-generator.html');
+    const visible = page.locator('#password-visible');
+    const output = page.locator('#password-output');
+    await expect(visible).toBeChecked();
+    await page.locator('#password-generate').click();
+    await expect(output).toBeVisible();
+    await visible.uncheck();
+    await page.locator('#password-generate').click();
+    await expect(visible).not.toBeChecked();
+    await expect(output).toBeHidden();
+    await page.locator('#password-length').fill('21');
+    await expect(visible).not.toBeChecked();
+    await page.locator('#password-generate').click();
+    await expect(output).toBeHidden();
+    await visible.check();
+    await page.locator('#password-generate').click();
+    await expect(visible).toBeChecked();
+    await expect(output).toBeVisible();
+    await page.locator('#password-clear').click();
+    await expect(visible).toBeChecked();
+    expect(await page.evaluate(() => (document.querySelector('#password-output') as HTMLTextAreaElement).value === '')).toBe(true);
+    await page.locator('#password-length').fill('7');
+    await page.locator('#password-generate').click();
+    await expect(visible).toBeChecked();
+    await expect(page.locator('#password-copy')).toBeDisabled();
+    await visible.uncheck();
+    await page.locator('#password-reset').click();
+    await expect(visible).toBeChecked();
+    await page.locator('#password-generate').click();
+    await expect(output).toBeVisible();
+  });
+  test('per-category ranges enforce exact counts, reject conflicts and keep visibility', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 844 });
+    await page.goto('/tools/password-generator.html');
+    for (const category of ['uppercase', 'lowercase', 'digits', 'symbols']) {
+      await expect(page.locator(`#password-${category}-min`)).toBeVisible();
+      await expect(page.locator(`#password-${category}-max`)).toHaveValue('');
+    }
+    await page.locator('#password-length').fill('12');
+    await page.locator('#password-count').fill('3');
+    for (const [category, amount] of [['uppercase', '2'], ['lowercase', '5'], ['digits', '3'], ['symbols', '2']]) {
+      await page.locator(`#password-${category}-min`).fill(amount!);
+      await page.locator(`#password-${category}-max`).fill(amount!);
+    }
+    await page.locator('#password-generate').click();
+    await expect(page.locator('#password-error')).toBeEmpty();
+    expect(await page.evaluate(() => {
+      const values = (document.querySelector('#password-output') as HTMLTextAreaElement).value.split('\n');
+      return values.length === 3 && values.every(value => value.length === 12 && (value.match(/[A-Z]/g) ?? []).length === 2 && (value.match(/[a-z]/g) ?? []).length === 5 && (value.match(/[0-9]/g) ?? []).length === 3 && (value.match(/[^A-Za-z0-9]/g) ?? []).length === 2);
+    })).toBe(true);
+    await page.locator('#password-visible').uncheck();
+    await page.locator('#password-digits-min').fill('4');
+    await page.locator('#password-generate').click();
+    await expect(page.locator('#password-error')).not.toBeEmpty();
+    await expect(page.locator('#password-copy')).toBeDisabled();
+    expect(await page.evaluate(() => (document.querySelector('#password-output') as HTMLTextAreaElement).value === '')).toBe(true);
+    await expect(page.locator('#password-visible')).not.toBeChecked();
+    await page.locator('#password-digits').uncheck();
+    await expect(page.locator('#password-digits-min')).toBeDisabled();
+    await expect(page.locator('#password-digits-max')).toBeDisabled();
+    await page.locator('#password-reset').click();
+    await expect(page.locator('#password-visible')).toBeChecked();
+    for (const category of ['uppercase', 'lowercase', 'digits', 'symbols']) {
+      await expect(page.locator(`#password-${category}-min`)).toHaveValue('0');
+      await expect(page.locator(`#password-${category}-max`)).toHaveValue('');
+      await expect(page.locator(`#password-${category}-min`)).toBeEnabled();
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
+    expect(await page.evaluate(() => (window as unknown as { __passwordChecks: { noLeaks(): boolean } }).__passwordChecks.noLeaks())).toBe(true);
   });
   test('Web Crypto unavailable clears output and fails closed', async ({ page }) => {
     await page.goto('/tools/password-generator.html');
