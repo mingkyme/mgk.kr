@@ -84,11 +84,17 @@ h3 { font-size: 20px; }
 .field { display: grid; gap: 8px; }
 label, legend { font-weight: 600; font-size: 14px; }
 .hint { margin: 0; color: var(--muted); font-size: 13px; }
-input, textarea, select, output.code-output {
+input:not([type="checkbox"]):not([type="radio"]), textarea, select, output.code-output {
   width: 100%; border: 0; border-radius: 8px; background: var(--surface-subtle);
   box-shadow: inset 0 0 0 1px var(--line-strong); padding: 12px 14px;
 }
-input, select { min-height: 44px; }
+input:not([type="checkbox"]):not([type="radio"]), select { min-height: 44px; }
+input[type="checkbox"], input[type="radio"] {
+  width: 18px; height: 18px; margin: 0; flex-shrink: 0; accent-color: var(--focus);
+}
+.form-grid label:has(> input[type="checkbox"]), .form-grid label:has(> input[type="radio"]) {
+  display: flex; align-items: center; gap: 8px; min-height: 44px;
+}
 textarea { min-height: 220px; resize: vertical; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 14px; line-height: 1.55; }
 textarea[readonly] { color: var(--text); }
 .actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
