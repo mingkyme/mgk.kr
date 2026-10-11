@@ -8,7 +8,7 @@ const entries = [
   { key: 'large-pdf-to-divided-images', title: 'PDF A4 분할', description: '파일을 업로드하지 않고 브라우저에서 큰 PDF 페이지를 A4로 분할합니다.', tag: 'LOCAL · PDF' },
   { key: 'tsv-tool', title: 'TSV 탭 변환기', description: 'cat -T의 ^I 표시를 실제 탭 또는 줄바꿈으로 변환합니다.', tag: 'TEXT · TSV' },
   { key: 'base64', title: 'Base64 인코더', description: 'Unicode 텍스트를 표준·URL-safe Base64로 인코딩하고 디코딩합니다.', tag: 'UTF-8 · JSON' },
-  { key: 'timer', title: 'LL-HLS 타이머', description: '밀리초 벽시계와 경과 시간으로 스트리밍 지연을 측정합니다.', tag: 'TIMER' },
+  { key: 'timer', title: '현재 시간 밀리초 시계', description: '밀리초 벽시계와 경과 시간으로 스트리밍 지연을 측정합니다.', tag: 'TIMER' },
   { key: 'regex-tester', title: '정규식 테스트', description: '매치·캡처 그룹·치환 결과를 확인하고 오래 걸리는 패턴은 자동 중단합니다.', tag: 'TEXT · REGEXP' },
   { key: 'cron-explainer', title: 'Cron 설명', description: '5필드 cron을 한국어로 설명하고 시간대별 다음 실행 시각을 확인합니다.', tag: 'TIME · CRON' },
   { key: 'qr-generator', title: 'QR 코드 생성', description: '텍스트·URL을 로컬 QR로 만들고 PNG 또는 SVG로 다운로드합니다.', tag: 'QR · PNG · SVG' },
