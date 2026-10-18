@@ -25,7 +25,7 @@ describe('analyzeSigh — synthetic frames only', () => {
     expect(result.duration).toBeCloseTo(3);
     expect(result.levelDbfs).toBeCloseTo(-20);
     expect(result.lowRatio).toBeCloseTo(0.6);
-    expect(result.score).toBe(57);
+    expect(result.score).toBe(Math.round(50 + 35 * 20 / 30 + 15 * 0.6));
   });
   it('rejects invalid or unbounded input rather than returning nonfinite scores', () => {
     for (const noise of [NaN, Infinity, -1, 2]) expect(analyzeSigh(sound(1), noise)).toBeNull();
@@ -34,7 +34,7 @@ describe('analyzeSigh — synthetic frames only', () => {
       { duration: NaN }, { duration: Infinity }, { duration: -1 }, { duration: 0.11 },
       { lowRatio: NaN }, { lowRatio: Infinity }, { lowRatio: -0.1 }, { lowRatio: 1.1 },
     ]) expect(analyzeSigh([{ rms: 0.1, lowRatio: 0.6, duration: 0.05, ...bad }, ...sound(1)], 0.001)).toBeNull();
-    expect(analyzeSigh(sound(8.1), 0.001)).toBeNull();
+    expect(analyzeSigh(sound(4.1), 0.001)).toBeNull();
     expect(analyzeSigh(Array.from({ length: 10001 }, () => ({ rms: 0.1, duration: 0.0001, lowRatio: 1 })), 0.001)).toBeNull();
   });
   it('accepts the 0.4 second boundary and scores each component monotonically', () => {
@@ -43,11 +43,11 @@ describe('analyzeSigh — synthetic frames only', () => {
     expect(analyzeSigh(sound(3, 0.01, 0.2), 0.001)!.score).toBeGreaterThan(base.score);
     expect(analyzeSigh(sound(1, 0.1, 0.2), 0.001)!.score).toBeGreaterThan(base.score);
     expect(analyzeSigh(sound(1, 0.01, 0.9), 0.001)!.score).toBeGreaterThan(base.score);
-    const full = analyzeSigh(sound(8, 1, 1), 0)!;
+    const full = analyzeSigh(sound(4, 1, 1), 0)!;
     expect(full.score).toBe(100);
-    expect(full.duration).toBeCloseTo(8);
+    expect(full.duration).toBeCloseTo(4);
     for (const value of Object.values(full)) expect(Number.isFinite(value)).toBe(true);
-    expect(analyzeSigh(sound(6, 1, 1), 0)!.score).toBe(full.score);
+    expect(analyzeSigh(sound(3, 1, 1), 0)!.score).toBe(full.score);
     expect(analyzeSigh(sound(1, 0.007, 1), 0)).toBeNull();
   });
   it('does not rank silence, ambient noise or a short burst', () => {
@@ -75,7 +75,7 @@ class FakeElement extends EventTarget {
 }
 function environment() {
   const elements = new Map<string, FakeElement>();
-  for (const id of ['name','start','stop','reset','status','error','results','score','phase','progress','level','duration','dbfs','low','empty']) elements.set('#sigh-' + id, new FakeElement());
+  for (const id of ['name','start','stop','reset','status','error','results','score','phase','progress','level','duration','dbfs','low','empty','pinwheel']) elements.set('#sigh-' + id, new FakeElement());
   const root = new FakeElement();
   const querySelector = (selector: string) => selector === '.sigh-orb' ? new FakeElement() : elements.get(selector);
   Object.assign(root, { querySelector });
@@ -135,7 +135,7 @@ it('ignores explicitly untrusted activation without allocating audio or changing
   expect(env.getUserMedia).not.toHaveBeenCalled();
 });
 
-it('samples one quiet second and eight seconds, then ranks safely and releases resources', async () => {
+it('samples one quiet second and four seconds, then ranks safely and releases resources', async () => {
   const env = environment(); mountSighMeter(env.root);
   env.elements.get('#sigh-start')!.click(); env.grant(); await flush();
   expect(env.root.dataset.state).toBe('calibrating');
@@ -143,7 +143,7 @@ it('samples one quiet second and eight seconds, then ranks safely and releases r
   for (let i=0;i<10;i++) env.tick(100);
   expect(env.root.dataset.state).toBe('measuring');
   env.setRms(0.1);
-  for (let i=0;i<79;i++) env.tick(100);
+  for (let i=0;i<39;i++) env.tick(100);
   expect(env.root.dataset.state).toBe('measuring');
   env.tick(100);
   expect(env.root.dataset.state).toBe('done');
@@ -226,4 +226,29 @@ it('requests only on click, resumes before permission, cancels pending and stops
   expect(env.raf.size).toBe(0);
   expect(env.root.dataset.state).toBe('idle');
   expect(env.elements.get('#sigh-results')!.children).toHaveLength(0);
+});
+
+it('spins the pinwheel only above calibrated noise, faster for stronger sound, and stops safely', async () => {
+  const env = environment(); mountSighMeter(env.root);
+  const fan = env.elements.get('#sigh-pinwheel')!;
+  expect(fan.dataset.spinning).toBe('false');
+  env.elements.get('#sigh-start')!.click(); env.grant(); await flush();
+  for (let i=0; i<10; i++) env.tick(100);
+  env.tick(100);
+  expect(fan.dataset.spinning).toBe('false');
+  env.setRms(0.03); env.tick(100);
+  expect(fan.dataset.spinning).toBe('true');
+  const angles = () => fan.style.setProperty.mock.calls.filter(call => call[0] === '--sigh-angle').map(call => Number.parseFloat(call[1]));
+  const weak = angles().at(-1)!;
+  expect(weak).toBeGreaterThan(0);
+  env.setRms(0.15); env.tick(100);
+  const strongStep = (angles().at(-1)! - weak + 360) % 360;
+  expect(strongStep).toBeGreaterThan(weak);
+  const callCount = angles().length;
+  env.setRms(0.001); env.tick(100);
+  expect(fan.dataset.spinning).toBe('false');
+  expect(angles()).toHaveLength(callCount);
+  env.elements.get('#sigh-stop')!.click();
+  expect(fan.dataset.spinning).toBe('false');
+  expect(env.stop).toHaveBeenCalledOnce();
 });

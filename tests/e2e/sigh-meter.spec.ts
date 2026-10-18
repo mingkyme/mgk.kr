@@ -122,7 +122,7 @@ async function measuredRound(page: Page, activeMs = 1600) {
   await page.clock.runFor(activeMs);
   await page.evaluate(() => { window.__sighTest.signal = false; });
   // The remaining input is silence: skip idle callbacks, retaining real active frames.
-  await page.clock.fastForward(8500 - activeMs);
+  await page.clock.fastForward(4500 - activeMs);
 }
 
 test('synthetic sigh rounds rank sustained sounds, escape names and never store or send them', async ({ page }) => {
@@ -136,7 +136,7 @@ test('synthetic sigh rounds rank sustained sounds, escape names and never store 
   await expect(page.locator('#sigh-results li')).toContainText('<svg onload=x()>');
   await expect(page.locator('#sigh-results svg')).toHaveCount(0);
   await page.locator('#sigh-name').fill('다음 참가자');
-  await measuredRound(page, 4500);
+  await measuredRound(page, 2500);
   await expect(page.locator('#sigh-results li')).toHaveCount(2);
   await expect(page.locator('#sigh-results li').first()).toContainText('다음 참가자');
   expect(await page.evaluate(() => window.__sighTest.stops)).toBe(2);
@@ -173,7 +173,7 @@ test('silence creates no result and reset cancels an active session', async ({ p
   await fakeAudio(page); await page.clock.install(); await page.goto('/tools/sigh-meter.html');
   await page.locator('#sigh-start').click();
   await expect(page.locator('#sigh-app')).toHaveAttribute('data-state', 'calibrating');
-  await page.clock.runFor(9500);
+  await page.clock.runFor(5500);
   await expect(page.locator('#sigh-results li')).toHaveCount(0);
   await expect(page.locator('#sigh-start')).toBeEnabled();
   expect(await page.evaluate(() => window.__sighTest.stops)).toBe(1);
@@ -279,4 +279,38 @@ test('native Web Audio and getUserMedia analyze a synthetic WAV, never a real mi
     })).toBe(true);
     await expect(page.locator('#sigh-start')).toBeEnabled();
   } finally { await browser.close(); rmSync(dir, {recursive: true, force: true}); }
+});
+
+test('pinwheel reacts to sound, pauses in quiet and releases the microphone after four seconds', async ({ page }, testInfo) => {
+  await fakeAudio(page); await page.clock.install();
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto('/tools/sigh-meter.html');
+  const fan = page.locator('#sigh-pinwheel');
+  await expect(fan).toBeVisible();
+  await expect(fan).toHaveAttribute('data-spinning', 'false');
+  await expect(page.locator('#sigh-progress')).toHaveAttribute('max', '4');
+  await page.locator('#sigh-start').click();
+  await expect(page.locator('#sigh-app')).toHaveAttribute('data-state', 'calibrating');
+  await page.clock.runFor(1100);
+  await expect(fan).toHaveAttribute('data-spinning', 'false');
+  await page.evaluate(() => { window.__sighTest.signal = true; });
+  await page.clock.runFor(650);
+  await expect(fan).toHaveAttribute('data-spinning', 'true');
+  const angle = await fan.evaluate(node => (node as SVGElement).style.getPropertyValue('--sigh-angle'));
+  expect(Number.parseFloat(angle)).toBeGreaterThan(0);
+  await expect(fan).not.toHaveCSS('transform', 'none');
+  await page.locator('.sigh-stage').screenshot({path:testInfo.outputPath('pinwheel-active.png')});
+  await page.evaluate(() => { window.__sighTest.signal = false; });
+  await page.clock.runFor(100);
+  await expect(fan).toHaveAttribute('data-spinning', 'false');
+  const stoppedAngle = await fan.evaluate(node => (node as SVGElement).style.getPropertyValue('--sigh-angle'));
+  await page.clock.runFor(100);
+  expect(await fan.evaluate(node => (node as SVGElement).style.getPropertyValue('--sigh-angle'))).toBe(stoppedAngle);
+  await page.clock.fastForward(3500);
+  await expect(page.locator('#sigh-app')).toHaveAttribute('data-state', 'done');
+  await expect(page.locator('#sigh-results li')).toHaveCount(1);
+  await expect(page.locator('#sigh-progress')).toHaveJSProperty('value', 4);
+  expect(await page.evaluate(() => window.__sighTest.stops)).toBe(1);
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await expect(fan).toHaveCSS('transform', 'none');
 });

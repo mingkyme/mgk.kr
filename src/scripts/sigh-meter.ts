@@ -1,4 +1,4 @@
-import { analyzeSigh, type SighFrame, type SighResult } from '../lib/sigh';
+import { analyzeSigh, SIGH_SECONDS, type SighFrame, type SighResult } from '../lib/sigh';
 
 type Phase = 'idle' | 'requesting' | 'calibrating' | 'measuring' | 'done' | 'error';
 interface Run {
@@ -14,7 +14,10 @@ export function mountSighMeter(root: HTMLElement): () => void {
   const stop = get<HTMLButtonElement>('stop'), reset = get<HTMLButtonElement>('reset');
   const status = get('status'), error = get('error'), phase = get('phase');
   const progress = get<HTMLProgressElement>('progress'), level = get<HTMLMeterElement>('level');
-  const orb = root.querySelector<HTMLElement>('.sigh-orb');
+  const pinwheel = root.querySelector<SVGGElement>('#sigh-pinwheel');
+  let angle = 0;
+  const stopPinwheel = () => { if (pinwheel) pinwheel.dataset.spinning = 'false'; };
+  stopPinwheel();
   let generation = 0, current: Run | undefined, pending = false, disposed = false;
   let entries: Entry[] = [], order = 0, participant = 1, autoName = '참가자1', automatic = true;
   const busy = () => ['requesting', 'calibrating', 'measuring'].includes(root.dataset.state ?? '');
@@ -38,13 +41,13 @@ export function mountSighMeter(root: HTMLElement): () => void {
     run.frames.length = 0;
     if (current === run) current = undefined;
     level.value = 0;
-    orb?.style.setProperty('--pulse', '0');
+    stopPinwheel();
   }
   function cancel() {
     generation++;
     if (current) release(current);
-    level.value = 0; progress.value = 0;
-    phase.textContent = '준비 1초 → 한숨 8초';
+    level.value = 0; progress.value = 0; stopPinwheel();
+    phase.textContent = `준비 1초 → 한숨 ${SIGH_SECONDS}초`;
     error.textContent = '';
     state('idle', pending ? '측정을 취소했어요. 열린 권한 요청이 끝나면 다시 시작할 수 있어요.' : '측정을 취소했어요. 준비되면 다시 시작하세요.');
   }
@@ -69,7 +72,7 @@ export function mountSighMeter(root: HTMLElement): () => void {
   function finish(run: Run, noiseRms: number, participantName: string) {
     const result = analyzeSigh(run.frames, noiseRms);
     release(run);
-    progress.value = 8;
+    progress.value = SIGH_SECONDS;
     phase.textContent = '측정 완료';
     if (!result) { state('done', '충분한 소리를 찾지 못했어요. 조용한 준비 1초 후 편안하게 다시 시도하세요.'); return; }
     get('score').textContent = String(result.score);
@@ -119,23 +122,32 @@ export function mountSighMeter(root: HTMLElement): () => void {
         }
         const lowRatio = totalEnergy > 0 ? Math.min(1, lowEnergy / totalEnergy) : 0;
         level.value = rms;
-        orb?.style.setProperty('--pulse', String(Math.min(1, rms * 5)));
+        const threshold = Math.max(0.008, noiseRms * 2.5);
+        const blowing = measuring && rms > threshold;
+        if (pinwheel) {
+          pinwheel.dataset.spinning = String(blowing);
+          if (blowing) {
+            const strength = Math.min(1, (rms - threshold) / 0.15);
+            angle = (angle + dt * (120 + strength * 960)) % 360;
+            pinwheel.style.setProperty('--sigh-angle', `${angle}deg`);
+          }
+        }
         if (!measuring) {
           const quietDt = Math.min(dt, Math.max(0, 1 - quietDuration));
           quietSum += rms * quietDt; quietDuration += quietDt;
           if (elapsed >= 1) {
             noiseRms = quietDuration > 0 ? quietSum / quietDuration : 0;
             measuring = true; started = now; shownSecond = -1;
-            state('measuring', '한숨 8초 · 편안하게 내쉬어 주세요.');
-            phase.textContent = '한숨 · 남은 8초'; shownSecond = 8;
+            state('measuring', `한숨 ${SIGH_SECONDS}초 · 편안하게 내쉬어 주세요.`);
+            phase.textContent = `한숨 · 남은 ${SIGH_SECONDS}초`; shownSecond = SIGH_SECONDS;
           }
         } else {
-          const duration = Math.min(dt, Math.max(0, 8 - captured));
+          const duration = Math.min(dt, Math.max(0, SIGH_SECONDS - captured));
           if (duration > 0 && run.frames.length < 10000) { run.frames.push({ rms, lowRatio, duration }); captured += duration; }
-          progress.value = Math.min(8, Math.max(0, elapsed));
-          const second = Math.max(0, Math.ceil(8 - elapsed));
+          progress.value = Math.min(SIGH_SECONDS, Math.max(0, elapsed));
+          const second = Math.max(0, Math.ceil(SIGH_SECONDS - elapsed));
           if (second !== shownSecond) { shownSecond = second; phase.textContent = `한숨 · 남은 ${second}초`; state('measuring', `한숨 ${second}초 남았어요. 편안한 호흡만 해 주세요.`); }
-          if (elapsed >= 8) { finish(run, noiseRms, participantName); return; }
+          if (elapsed >= SIGH_SECONDS) { finish(run, noiseRms, participantName); return; }
         }
         run.raf = requestAnimationFrame(frame);
       } catch (reason) { fail(run, reason); }
@@ -203,7 +215,7 @@ export function mountSighMeter(root: HTMLElement): () => void {
     } finally { pending = false; controls(); }
   }
   function clear() {
-    cancel(); entries = []; order = 0; participant = 1; autoName = '참가자1'; automatic = true; name.value = autoName;
+    cancel(); angle = 0; pinwheel?.style.setProperty('--sigh-angle', '0deg'); entries = []; order = 0; participant = 1; autoName = '참가자1'; automatic = true; name.value = autoName;
     for (const id of ['score', 'duration', 'dbfs', 'low']) get(id).textContent = '—';
     renderBoard(); state('idle', '기록을 지웠어요. 버튼을 누를 때만 마이크 권한을 요청해요.');
   }
