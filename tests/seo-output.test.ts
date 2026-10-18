@@ -3,6 +3,7 @@ import { cpSync, mkdtempSync, readFileSync, writeFileSync, rmSync } from 'node:f
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { spawnSync } from 'node:child_process';
+import { toolSlugs } from '../src/data/tool-catalog';
 beforeAll(() => {
   const result = spawnSync('npm', ['run', 'build'], { encoding: 'utf8' });
   if (result.status !== 0) throw new Error(result.stdout + result.stderr);
@@ -11,7 +12,7 @@ describe('built SEO verifier detects damaged output', () => {
   it('accepts healthy output for the expanded tool catalog', () => {
     const result = spawnSync(process.execPath, [resolve('scripts/verify-output.mjs')], { encoding: 'utf8' });
     expect(result.status, result.stdout + result.stderr).toBe(0);
-    expect(result.stdout).toContain('seo_routes=17 seo_errors=0');
+    expect(result.stdout).toContain(`seo_routes=${toolSlugs.length + 3} seo_errors=0`);
   });
   for (const [name, file, damage] of [
     ['missing application schema', 'tools/base64.html', (s: string) => s.replaceAll('WebApplication', 'Thing')],

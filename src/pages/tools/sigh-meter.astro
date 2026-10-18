@@ -1,0 +1,44 @@
+---
+import ToolLayout from '../../layouts/ToolLayout.astro';
+---
+<ToolLayout title="한숨 측정기" description="같은 기기에서 편안한 한숨으로 겨루는, 브라우저 안의 작은 대결." eyebrow="JUST FOR FUN · LOCAL ONLY">
+  <section id="sigh-app" data-state="idle" aria-labelledby="sigh-heading">
+    <div class="sigh-intro"><span class="sigh-badge">오늘은 얼마나 후—?</span><h2 id="sigh-heading">오늘의 한숨 대결</h2><p>마음의 무게 말고, 소리의 재미만 비교해요.</p></div>
+    <p class="sigh-rule"><strong>같은 기기 · 같은 입력 음량 · 입에서 15~20cm</strong><br />기기와 마이크 입력 게인을 바꾸지 말고, 첫 1초는 조용히 준비하세요. 다음 8초 동안 평소처럼 편안하게 내쉬면 돼요.</p>
+    <div class="sigh-stage">
+      <div class="sigh-orb" aria-hidden="true"><span>후<span class="sigh-dots">···</span></span></div>
+      <p id="sigh-phase">준비 1초 → 한숨 8초</p>
+      <label class="sigh-meter-label" for="sigh-level">실시간 마이크 레벨 <small>녹음 없이 분석</small></label>
+      <meter id="sigh-level" min="0" max="1" value="0" aria-label="실시간 마이크 레벨"></meter>
+      <label class="sigh-meter-label" for="sigh-progress">한숨 측정 진행 <small>8초</small></label>
+      <progress id="sigh-progress" max="8" value="0" aria-label="8초 측정 진행"></progress>
+    </div>
+    <div class="sigh-controls">
+      <label for="sigh-name">참가자 이름 <input id="sigh-name" type="text" maxlength="20" value="참가자1" autocomplete="off" /></label>
+      <div class="sigh-buttons"><button id="sigh-start" type="button">마이크 켜고 측정</button><button id="sigh-stop" type="button" disabled>측정 취소</button><button id="sigh-reset" type="button">기록 지우기</button></div>
+    </div>
+    <p id="sigh-status" role="status" aria-live="polite" aria-atomic="true">버튼을 누를 때만 마이크 권한을 요청해요.</p>
+    <p id="sigh-error" role="alert" aria-atomic="true"></p>
+    <section class="sigh-last" aria-labelledby="sigh-last-heading"><h3 id="sigh-last-heading">방금 한숨</h3><p class="sigh-score"><output id="sigh-score" aria-label="마지막 점수">—</output><span> / 100점</span></p><dl class="sigh-metrics"><div><dt>소리가 난 시간</dt><dd id="sigh-duration">—</dd></div><div><dt>상대 입력 레벨</dt><dd id="sigh-dbfs">—</dd></div><div><dt>저음 에너지 비율</dt><dd id="sigh-low">—</dd></div></dl></section>
+    <section class="sigh-board" aria-labelledby="sigh-board-heading"><div class="sigh-board-title"><h3 id="sigh-board-heading">한숨 명예의 전당</h3><span>이번 페이지 · 최대 10회</span></div><p id="sigh-empty">아직 기록이 없어요. 첫 번째 후—의 주인공은?</p><ol id="sigh-results" aria-label="점수 내림차순 한숨 순위"></ol></section>
+    <aside class="sigh-caution"><h3>가볍게 즐기기 위한 약속</h3><ul><li>숨을 참거나 과호흡하지 마세요. 평소의 편안한 호흡만으로 충분해요. 불편하면 즉시 취소하세요.</li><li>재미용 소리 점수이며 의료 도구가 아니에요. 건강·슬픔·스트레스를 진단하거나 실제 한숨의 물리적 깊이를 측정하지 않아요.</li><li>한숨을 판별하는 분류기가 아니므로 말소리·음악도 점수를 받을 수 있어요. 조용한 곳에서 같은 조건으로 비교하세요.</li><li>주변 소음을 보정해 점수를 계산해요. 표시되는 dBFS는 기기 기준의 상대 입력 레벨이며, 실제 음압(dB SPL)이 아니에요.</li><li>원본 음성을 녹음·저장·전송하지 않아요. 수치와 이름은 이 페이지 메모리에만 남고 새로고침하면 사라져요.</li></ul></aside>
+    <noscript><p>마이크를 분석하려면 JavaScript가 필요해요. 허용 전에는 마이크를 사용하지 않아요.</p></noscript>
+  </section>
+</ToolLayout>
+<script>
+  import '../../scripts/sigh-meter';
+</script>
+<style>
+  #sigh-app{--sigh-ink:#163c37;--sigh-mint:#c8f4e5;--sigh-coral:#ff937e;color:var(--sigh-ink);font-variant-numeric:tabular-nums;color-scheme:light;background:#fffdfa;border-radius:1.4rem;padding:clamp(.8rem,3vw,1.5rem)}
+  #sigh-app h2,#sigh-app h3{color:var(--sigh-ink)}
+  .sigh-intro{text-align:center;padding:1rem 0}.sigh-intro h2{font-size:clamp(1.8rem,5vw,2.6rem);letter-spacing:-.05em;margin:.8rem 0}.sigh-badge{display:inline-block;background:var(--sigh-mint);padding:.4rem .9rem;border-radius:3rem;font-size:.8rem;font-weight:800;letter-spacing:.06em}.sigh-intro p{margin:.4rem 0;color:#3d6058}
+  .sigh-rule{padding:1.1rem 1.3rem;background:#f0faf6;border:1px solid #b8dbcf;border-radius:1rem;line-height:1.8}.sigh-stage{background:radial-gradient(ellipse at 50% 20%,#d8f8ed,#f8fcfa 65%);padding:1.7rem;border:1px solid #d2e8df;border-radius:1.5rem;text-align:center;margin:1.5rem 0}
+  .sigh-orb{--pulse:0;display:grid;place-items:center;margin:0 auto 1.4rem;width:clamp(8rem,30vw,11rem);aspect-ratio:1;border-radius:45% 55% 53% 47%;background:var(--sigh-mint);border:2px solid var(--sigh-ink);box-shadow:7px 9px 0 #183c3714;transform:scale(calc(1 + var(--pulse)*.12));transition:transform .1s ease-out}.sigh-orb>span{font-size:2.7rem;font-weight:800;transform:rotate(-8deg)}.sigh-dots{color:#d24a38}
+  [data-state="measuring"] .sigh-orb{background:var(--sigh-coral);animation:sigh-float 2s ease-in-out infinite}[data-state="calibrating"] .sigh-orb{animation:sigh-float 3s ease-in-out infinite}@keyframes sigh-float{50%{border-radius:55% 45% 45% 55%}}
+  #sigh-phase{font-size:1.1rem;font-weight:800;margin:1rem 0}.sigh-meter-label{display:flex;justify-content:space-between;gap:.6rem;text-align:left;font-size:.8rem;font-weight:700;margin:1rem 0 .35rem}.sigh-meter-label small{font-weight:400}meter,progress{display:block;width:100%;height:.9rem;accent-color:#236956}meter{accent-color:#e96751}
+  .sigh-controls label{display:grid;gap:.5rem;font-weight:700}.sigh-controls input{width:100%;box-sizing:border-box;border:1px solid #8cad9f;background:#fff;color:var(--sigh-ink);padding:.8rem 1rem;border-radius:.7rem;font:inherit}.sigh-buttons{display:flex;flex-wrap:wrap;gap:.6rem;margin-top:1rem}.sigh-buttons button{border-radius:.75rem;padding:.85rem 1rem;border:1px solid #9db8ad;background:#fff;color:var(--sigh-ink);font:inherit;font-weight:700;cursor:pointer}#sigh-start{background:var(--sigh-ink);color:#fff;flex-grow:1}button:disabled{opacity:.5;cursor:not-allowed}#sigh-app :focus-visible{outline:3px solid #d24a38;outline-offset:3px}
+  #sigh-status{min-height:1.7em;font-size:.9rem}#sigh-error{color:#a42e22;font-weight:700}#sigh-error:empty{display:none}.sigh-last{background:#fff7f2;border:1px solid #f2ccbb;border-radius:1.2rem;padding:1.3rem;margin:1.5rem 0}.sigh-last h3{margin:0}.sigh-score{margin:.6rem 0 1rem}.sigh-score output{font-size:3.5rem;font-weight:850;letter-spacing:-.06em}.sigh-score span{font-size:.85rem}.sigh-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.6rem;margin:0}.sigh-metrics dt{font-size:.75rem;color:#5d615a}.sigh-metrics dd{margin:.35rem 0 0;font-size:1rem;font-weight:800}
+  .sigh-board-title{display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:.3rem}.sigh-board-title h3{margin:.5rem 0}.sigh-board-title>span,#sigh-empty{font-size:.8rem;color:#587368}#sigh-results{padding:0;list-style:none}#sigh-results :global(li){display:flex;align-items:center;gap:.7rem;padding:.9rem;border-bottom:1px solid #d6e7de;overflow-wrap:anywhere}#sigh-results :global(li[data-winner="true"]){background:#e7f8ef;border-radius:.7rem}#sigh-results :global(.sigh-entry-name){flex:1;min-width:0}#sigh-results :global(.sigh-entry-score){font-weight:850;white-space:nowrap}.sigh-caution{margin-top:2rem;border-top:1px dashed #adcdbd;padding-top:1rem}.sigh-caution h3{font-size:.95rem}.sigh-caution ul{padding-left:1.2rem;font-size:.8rem;line-height:1.8;color:#476358}.sigh-caution li+li{margin-top:.4rem}
+  @media(max-width:440px){.sigh-stage{padding:1.2rem}.sigh-metrics{grid-template-columns:1fr}.sigh-metrics>div{display:flex;align-items:baseline;justify-content:space-between;gap:.5rem}.sigh-metrics dd{margin:0}.sigh-buttons button{font-size:.85rem;padding:.8rem}.sigh-rule{font-size:.85rem}}
+  @media(prefers-reduced-motion:reduce){.sigh-orb,[data-state="measuring"] .sigh-orb,[data-state="calibrating"] .sigh-orb{animation:none;transition:none;transform:none}}
+</style>

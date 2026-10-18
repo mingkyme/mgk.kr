@@ -14,6 +14,7 @@ const entries = [
   { key: 'qr-generator', title: 'QR 코드 생성기 — 무료 PNG·SVG 다운로드', description: '텍스트·URL·한글을 QR 코드로 만들고 무료 PNG·SVG 파일로 다운로드하세요. 이미지 크기와 오류 정정 수준을 선택할 수 있으며 입력은 외부 서비스로 전송하지 않습니다.', tag: 'QR · PNG · SVG' },
   { key: 'uuid-generator', title: 'UUID 생성기 — v4·v7 일괄 생성·복사', description: 'UUID v4·v7을 한 번에 1–100개 생성하고 복사하거나 텍스트로 다운로드하세요. 브라우저에서 난수 기반 v4와 생성 시각을 포함한 v7을 선택하며 결과는 자동 저장하지 않습니다.', tag: 'UUID · v4 · v7' },
   { key: 'password-generator', title: '비밀번호 생성기 — 길이·문자 옵션, 저장 없이 생성', description: '비밀번호를 Web Crypto 난수로 생성하세요. 길이·개수와 문자 종류별 최소·최대 개수, 비슷한 문자 제외를 설정하며 결과는 자동 저장하거나 서버로 전송하지 않습니다.', tag: 'LOCAL · CSPRNG' },
+  { key: 'sigh-meter', title: '한숨 측정기 — 누가 더 깊은 한숨을 쉴까?', description: '마이크로 한숨 소리의 길이·상대 크기·저음 비중을 분석하고 점수를 겨뤄보세요. 같은 기기로 번갈아 즐기는 재미용 대결이며 소리는 브라우저 안에서만 처리합니다.', tag: 'FUN · MICROPHONE' },
 ] as const satisfies readonly { key: ToolKey; title: string; description: string; tag: string }[];
 export const toolCatalog = entries.map(tool => ({ ...tool, href: `/tools/${tool.key}.html` }));
 export const toolSlugs = entries.map(tool => tool.key);

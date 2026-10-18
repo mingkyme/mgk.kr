@@ -11,4 +11,5 @@ export const toolGroups = [
   { id: 'time-tools', title: '시간·스케줄', description: '로컬 날짜와 Unix 초 변환, Cron 실행 시각, 밀리초 시계를 확인하세요.', tools: ['unixtime', 'cron-explainer', 'timer'] },
   { id: 'generators', title: 'QR·UUID·비밀번호 생성', description: '필요한 값과 이미지를 생성하고 직접 복사하거나 다운로드하세요.', tools: ['qr-generator', 'uuid-generator', 'password-generator'] },
   { id: 'file-server-tools', title: 'PDF·서버 설정', description: '큰 PDF를 A4로 나누거나 서버 접속 설정과 인증서 확인 명령을 만드세요.', tools: ['large-pdf-to-divided-images', 'securecrt-config-maker', 'ssl-checker'] },
+  { id: 'fun-tools', title: '재미로 해보기', description: '같은 기기로 친구들과 가볍게 소리 점수를 겨뤄 보세요.', tools: ['sigh-meter'] },
 ] as const satisfies readonly { id: string; title: string; description: string; tools: readonly ToolKey[] }[];
